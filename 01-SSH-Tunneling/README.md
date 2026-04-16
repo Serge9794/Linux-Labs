@@ -206,7 +206,7 @@ Machine Cliente                    Machine Serveur
 
 **[Serge TOGNON]**
 - 🔗 GitHub : [@votre-username](https://github.com/Serge9794)
-- 💼 LinkedIn : [Votre Profil](https://linkedin.com/in/Serge_TOGNON)
+- 💼 LinkedIn : [Votre Profil](https://linkedin.com/in/serge-tognon-a63443187)
 
 ---
 
