@@ -70,7 +70,7 @@ sudo systemctl status ssh
 
 ---
 
-## 🚀 Guide pas à pas
+##  Guide pas à pas
 
 ### Étape 1 — Préparation du serveur
 
@@ -92,7 +92,8 @@ cat index.html
 Bienvenue sur l'interface privee de serge
 ```
 
-> 📸 *[Insérer ici une capture d'écran du terminal serveur montrant la création du fichier]*
+> 📸 <img width="1596" height="974" alt="1" src="https://github.com/user-attachments/assets/676f92eb-6a21-47fa-82c6-71dee41335c1" />
+
 
 ---
 
@@ -115,7 +116,8 @@ Serving HTTP on 0.0.0.0 port 8989 (http://0.0.0.0:8989/) ...
 
 > ⚠️ **Important :** Le service écoute sur `0.0.0.0`, mais grâce au tunnel SSH, il ne sera accessible que via une connexion authentifiée. Aucun port n'est ouvert publiquement.
 
-> 📸 *[Insérer ici une capture d'écran du terminal serveur avec le serveur Python en écoute]*
+> 📸 <img width="1920" height="974" alt="2" src="https://github.com/user-attachments/assets/cb41432d-26a8-4fd7-bde3-0300bfb209e2" />
+
 
 ---
 
@@ -141,7 +143,8 @@ ssh -L 9999:localhost:8989 serge@192.168.10.2
 
 Saisir le mot de passe de `serge` lorsque demandé. **Laisser ce terminal ouvert** : le tunnel reste actif tant que la session SSH est ouverte.
 
-> 📸 *[Insérer ici une capture d'écran du terminal client avec la session SSH établie]*
+> 📸 <img width="1920" height="974" alt="3" src="https://github.com/user-attachments/assets/95a7b867-1fb2-4c61-85c2-3a688bb45ceb" />
+
 
 ---
 
@@ -153,7 +156,8 @@ Sans fermer le terminal SSH, ouvrir **Firefox** sur la machine cliente et navigu
 http://localhost:9999
 ```
 
-> 📸 *[Insérer ici une capture d'écran de Firefox affichant "Bienvenue sur l'interface privee de serge"]*
+> 📸 <img width="1920" height="974" alt="4" src="https://github.com/user-attachments/assets/6ee9b91a-8586-4376-b38e-82cd8e1f99d6" />
+
 
 ✅ **Succès !** Le contenu hébergé sur le serveur (`port 8989`) est accessible depuis le client (`port 9999`) via le tunnel SSH chiffré.
 
@@ -200,9 +204,9 @@ Machine Cliente                    Machine Serveur
 
 ## 👤 Auteur
 
-**[Votre Nom]**
-- 🔗 GitHub : [@votre-username](https://github.com/votre-username)
-- 💼 LinkedIn : [Votre Profil](https://linkedin.com/in/votre-profil)
+**[Serge TOGNON]**
+- 🔗 GitHub : [@votre-username](https://github.com/Serge9794)
+- 💼 LinkedIn : [Votre Profil](https://linkedin.com/in/Serge_TOGNON)
 
 ---
 
