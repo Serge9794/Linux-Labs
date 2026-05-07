@@ -42,7 +42,9 @@ Au démarrage de la machine virtuelle, attendez l'apparition du menu GRUB (gén�
 
 **Action :** Appuyez sur `e` pour éditer l'entrée de démarrage sélectionnée.
 
-> 📸 **[CAPTURE D'ÉCRAN — Menu GRUB : appuyer sur `e` pour éditer]**
+> 📸 
+> <img width="512" height="257" alt="1" src="https://github.com/user-attachments/assets/55a7d44a-9409-4b82-944f-6347bd514251" />
+
 
 ---
 
@@ -66,7 +68,9 @@ La ligne modifiée ressemblera à :
 linux ($root)/vmlinuz-5.14.0-xxx.el9.x86_64 root=/dev/mapper/... ro crashkernel=auto rd.break
 ```
 
-> 📸 **[CAPTURE D'ÉCRAN — Ligne `linux` modifiée avec `rd.break`]**
+> 📸 
+> <img width="501" height="74" alt="2" src="https://github.com/user-attachments/assets/ff8e0824-91b1-498b-8260-e4009e32b74e" />
+
 
 **Action :** Appuyez sur `Ctrl+X` pour démarrer avec ces paramètres.
 
@@ -76,7 +80,8 @@ Le système s'arrête en mode `initramfs` et présente un shell minimal :
 switch_root:/#
 ```
 
-> 📸 **[CAPTURE D'ÉCRAN — Invite de commande `switch_root:/#`]**
+> 📸 
+<img width="358" height="79" alt="3" src="https://github.com/user-attachments/assets/4f0d9304-b377-4b3e-9397-872d6c122020" />
 
 ---
 
@@ -105,7 +110,9 @@ mount | grep sysroot
 # /dev/mapper/rhel-root on /sysroot type xfs (rw,relatime,...)
 ```
 
-> 📸 **[CAPTURE D'ÉCRAN — Sortie de `mount | grep sysroot` avant et après le remontage]**
+> 📸 
+> <img width="440" height="62" alt="4" src="https://github.com/user-attachments/assets/4c53e4b4-db15-4721-8183-d2d90b7e0a0e" />
+
 
 ---
 
@@ -139,7 +146,9 @@ Retype new password: Redhat@2024!
 passwd: all authentication tokens updated successfully.
 ```
 
-> 📸 **[CAPTURE D'ÉCRAN — Exécution de `passwd root` et confirmation du succès]**
+> 📸 
+> <img width="378" height="66" alt="5" src="https://github.com/user-attachments/assets/80c84b37-2771-46a8-bf87-73cd78fffb0f" />
+
 
 ---
 
@@ -156,7 +165,9 @@ touch /.autorelabel
 
 > 💡 La présence de ce fichier vide indique à SELinux de réétiqueter l'intégralité du système de fichiers au prochain démarrage. Le fichier est automatiquement supprimé une fois l'opération terminée.
 
-> 📸 **[CAPTURE D'ÉCRAN — Commande `touch /.autorelabel` exécutée]**
+> 📸 
+> <img width="272" height="21" alt="6" src="https://github.com/user-attachments/assets/529645af-0572-4b7e-886e-578af0a6bc23" />
+
 
 ---
 
@@ -172,7 +183,9 @@ exit
 exit
 ```
 
-> 📸 **[CAPTURE D'ÉCRAN — Processus de relabeling SELinux en cours au redémarrage (peut durer quelques minutes)]**
+> 📸 
+> <img width="572" height="398" alt="7" src="https://github.com/user-attachments/assets/5fe5be17-5b84-47a4-9fe9-b67a540a6dd1" />
+
 
 Le système effectue le relabeling SELinux (une barre de progression peut s'afficher), puis redémarre automatiquement.
 
@@ -202,7 +215,9 @@ sestatus
 # Mode from config file:          enforcing
 ```
 
-> 📸 **[CAPTURE D'ÉCRAN — Connexion root réussie + sortie de `getenforce` et `sestatus`]**
+> 📸 
+> <img width="432" height="287" alt="8" src="https://github.com/user-attachments/assets/98ce0f6e-5756-4224-aef2-a6d64a2d414e" />
+
 
 ---
 
