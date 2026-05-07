@@ -11,7 +11,7 @@
 
 > **Contexte d'examen — Style EX200**
 
-Le système `server1.lab.local` est inaccessible suite à la perte du mot de passe de l'utilisateur **root**. Aucun autre compte utilisateur ne dispose de privilèges d'administration (groupe `wheel` vide). Le système démarre normalement mais aucune connexion privilégiée n'est possible.
+Le système `server` est inaccessible suite à la perte du mot de passe de l'utilisateur **root**. Aucun autre compte utilisateur ne dispose de privilèges d'administration (groupe `wheel` vide). Le système démarre normalement mais aucune connexion privilégiée n'est possible.
 
 **Votre mission :**
 
@@ -220,7 +220,7 @@ sestatus
 
 ---
 
-## 💡 Why This Matters
+
 
 ### Pourquoi cette compétence est-elle essentielle pour un administrateur système ?
 
@@ -250,6 +250,13 @@ Récupérer l'accès sans réinstallation préserve les données, la configurati
 ---
 
 ## ✍️ Auteur
+**[Serge TOGNON]**
+**Serge TOGNON**
+- 🔗 GitHub :[Serge9794](https://github.com/Serge9794)
+- 💼 LinkedIn : [Serge TOGNON](https://linkedin.com/in/serge-tognon-a63443187)
+
+---
+
 
 > Lab réalisé dans le cadre de la préparation à la certification **RHCSA EX200** — Red Hat Enterprise Linux 9.
 
