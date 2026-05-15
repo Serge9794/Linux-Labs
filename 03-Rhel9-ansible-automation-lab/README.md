@@ -62,7 +62,9 @@ Ce lab repose sur **2 machines virtuelles RHEL** interconnectées en réseau loc
 └────────────────────────────────────────────────────────────────┘
 ```
 
-> [IMAGE_ICI — Capture d'écran : Vue des deux VMs actives dans votre hyperviseur (VirtualBox)]
+<img width="182" height="50" alt="A" src="https://github.com/user-attachments/assets/101b6863-e514-4018-acde-ee7b0cf7ee25" />
+<img width="176" height="43" alt="B" src="https://github.com/user-attachments/assets/f4079ade-ea72-4fa9-88bc-3c0a52a0717a" />
+
 
 ---
 
@@ -100,6 +102,10 @@ sudo chmod 440 /etc/sudoers.d/ansible
 # Vérifier la syntaxe du fichier pour éviter tout blocage sudo
 sudo visudo -c
 # Résultat attendu : /etc/sudoers: parsed OK
+<img width="421" height="275" alt="C" src="https://github.com/user-attachments/assets/a57b542a-135d-442a-b558-3386ee003863" />
+<img width="452" height="217" alt="F" src="https://github.com/user-attachments/assets/952fc020-9faa-44b3-baf6-00fae15dc66a" />
+
+
 ```
 
 ### 1.3 — Vérifier les droits sudo de l'utilisateur `ansible`
@@ -117,6 +123,10 @@ sudo systemctl status sshd
 
 # Revenir à votre utilisateur initial
 exit
+<img width="618" height="293" alt="D" src="https://github.com/user-attachments/assets/2915f5c8-6bfc-4093-84ce-57c8dd672dee" />
+<img width="640" height="270" alt="G" src="https://github.com/user-attachments/assets/0d17003e-7797-450e-8a00-833a11c1fb79" />
+
+
 ```
 
 ### 1.4 — Vérifier la création de l'utilisateur
@@ -135,7 +145,10 @@ grep ansible /etc/passwd
 ls -la /home/ansible/
 ```
 
-> [IMAGE_ICI — Capture d'écran : Résultat de `id ansible` et `sudo whoami` retournant `root` sur les deux VMs]
+> <img width="506" height="247" alt="E" src="https://github.com/user-attachments/assets/313a88c9-52a4-4677-b3a9-3dedec0f5add" />
+<img width="553" height="196" alt="H" src="https://github.com/user-attachments/assets/46745694-d7a3-4e61-8ce8-c78ec2efa2c4" />
+
+
 
 > ⚠️ **Important :** Répéter toutes les commandes de cette étape sur **les deux machines** avant de continuer.
 
