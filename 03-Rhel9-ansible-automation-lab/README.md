@@ -102,9 +102,10 @@ sudo chmod 440 /etc/sudoers.d/ansible
 # Vérifier la syntaxe du fichier pour éviter tout blocage sudo
 sudo visudo -c
 # Résultat attendu : /etc/sudoers: parsed OK
+```
 <img width="421" height="275" alt="C" src="https://github.com/user-attachments/assets/7a338617-2de0-48a5-9373-26ef0dc794b2" />
 <img width="452" height="217" alt="F" src="https://github.com/user-attachments/assets/38984a3c-e885-4d6b-8d45-be1efbce8365" />
-
+```
 
 ### 1.3 — Vérifier les droits sudo de l'utilisateur `ansible`
 
@@ -121,11 +122,12 @@ sudo systemctl status sshd
 
 # Revenir à votre utilisateur initial
 exit
+```
 
 <img width="618" height="293" alt="D" src="https://github.com/user-attachments/assets/13c86b90-dbd4-49ea-8e05-21004e4f57ac" />
 
 <img width="640" height="270" alt="G" src="https://github.com/user-attachments/assets/8b68907e-c068-45b4-b7f6-5db1e1771964" />
-
+```
 
 
 
