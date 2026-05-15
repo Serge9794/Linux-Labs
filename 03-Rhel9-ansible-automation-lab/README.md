@@ -1,323 +1,527 @@
-# 🐧 RHCSA Lab — RHEL 9 | Ansible | SSH | Apache
+# 🚀 Ansible Automation Lab — RHCSA Training
 
-![RHEL 9](https://img.shields.io/badge/RHEL-9-EE0000?style=for-the-badge&logo=redhat&logoColor=white)
-![Ansible](https://img.shields.io/badge/Ansible-2.14+-EE0000?style=for-the-badge&logo=ansible&logoColor=white)
-![Apache](https://img.shields.io/badge/Apache-httpd-D22128?style=for-the-badge&logo=apache&logoColor=white)
-![SSH](https://img.shields.io/badge/SSH-Ed25519-1F3864?style=for-the-badge&logo=openssh&logoColor=white)
-![SELinux](https://img.shields.io/badge/SELinux-Enforcing-CC0000?style=for-the-badge)
-![License](https://img.shields.io/badge/License-MIT-brightgreen?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Complete-4CAF50?style=for-the-badge)
-
-> **Laboratoire professionnel de préparation à la certification RHCSA EX200** sous Red Hat Enterprise Linux 9.
-> Déploiement automatisé d'un serveur Apache via Ansible avec gestion SSH, firewalld et SELinux.
-
-**Auteur :** [Serge TOGNON](INSÉRER_LIEN_LINKEDIN) — Azure Administrator (AZ-104) | RHCSA Candidate
-
----
-
-## 📐 Architecture
+<div align="center">
 
 ```
-┌──────────────────────────┐          ┌──────────────────────────┐
-│     client.lab.local     │          │     server.lab.local     │
-│     192.168.10.1         │          │     192.168.10.10        │
-│                          │          │                          │
-│  ▸ Nœud de contrôle      │◄─ SSH ──►│  ▸ Nœud géré            │
-│  ▸ Ansible Master        │ Ansible  │  ▸ Apache httpd          │
-│  ▸ SSH Client            │─────────►│  ▸ firewalld + SELinux   │
-└──────────────────────────┘          └──────────────────────────┘
-         Réseau : 192.168.10.0/24  —  Host-Only / Internal Network
-         OS     : Red Hat Enterprise Linux 9.x  (2 × VM)
+╔═══════════════════════════════════════════════════════════════╗
+║        🤖  ANSIBLE AUTOMATION LAB — RHCSA TRAINING  🎯       ║
+║        Automatisation Linux | Red Hat | Infrastructure        ║
+╚═══════════════════════════════════════════════════════════════╝
 ```
 
----
+![Ansible](https://img.shields.io/badge/Ansible-EE0000?style=for-the-badge&logo=ansible&logoColor=white)
+![RHEL](https://img.shields.io/badge/RHEL-CC0000?style=for-the-badge&logo=red-hat&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+![SSH](https://img.shields.io/badge/SSH-4D4D4D?style=for-the-badge&logo=gnubash&logoColor=white)
+![RHCSA](https://img.shields.io/badge/RHCSA-Exam_Ready-009639?style=for-the-badge)
 
-## 🎯 Compétences RHCSA Démontrées
+*Laboratoire pratique d'automatisation pour la préparation à la certification RHCSA*
 
-| Domaine | Compétence | Outil |
-|--------|-----------|-------|
-| 🌐 Réseau | Configuration IP statique | `nmcli` |
-| 🌐 Réseau | Résolution DNS locale | `/etc/hosts` |
-| 🔐 Sécurité | Authentification SSH par clé Ed25519 | `ssh-keygen`, `ssh-copy-id` |
-| 🔐 Sécurité | Gestion pare-feu | `firewalld` |
-| 🔐 Sécurité | SELinux Enforcing + contextes | `restorecon`, `semanage` |
-| ⚙️ Services | Gestion systemd | `systemctl` |
-| 📦 Packages | Installation automatisée | `dnf` via Ansible |
-| 🤖 Automatisation | Inventory + Playbooks YAML | Ansible |
-| 🤖 Automatisation | Commandes ad hoc | `ansible` |
-| 📝 Fichiers | Édition fichiers de config | `vi` / `vim` |
+</div>
 
 ---
 
-## ⚡ Démarrage Rapide
+## 📋 Table des Matières
 
-### Prérequis
+1. [🏗️ Architecture](#️-architecture)
+2. [👤 Étape 1 — Création de l'utilisateur `ansible`](#-étape-1--création-de-lutilisateur-ansible)
+3. [⚙️ Étape 2 — Installation d'Ansible](#️-étape-2--installation-dansible)
+4. [🔑 Étape 3 — Configuration SSH par clé](#-étape-3--configuration-ssh-par-clé)
+5. [📦 Étape 4 — Création de l'inventaire](#-étape-4--création-de-linventaire)
+6. [📜 Étape 5 — Premier Playbook](#-étape-5--premier-playbook)
+7. [👨‍💻 Auteur](#-auteur)
+8. [🎓 Conclusion RHCSA](#-conclusion-rhcsa)
 
-- 2 VMs RHEL 9 (ou AlmaLinux 9 / Rocky Linux 9) avec réseau Host-Only
-- Accès root sur les deux machines
-- Ansible installé sur `client.lab.local`
+---
+
+## 🏗️ Architecture
+
+Ce lab repose sur **2 machines virtuelles RHEL** interconnectées en réseau local, avec un utilisateur système dédié `ansible` présent sur les deux machines :
+
+| 🖥️ Rôle | 🏷️ Hostname | 🌐 Adresse IP | 👤 Utilisateur | 📌 Fonction |
+|---|---|---|---|---|
+| **Control Node** | `client.lab.local` | `192.168.10.1` | `ansible` | Exécute Ansible, lance les playbooks |
+| **Managed Node** | `server.lab.local` | `192.168.10.2` | `ansible` | Cible gérée par Ansible via SSH |
+
+### Schéma de l'architecture
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                     Réseau : 192.168.10.0/24                   │
+│                                                                 │
+│   ┌──────────────────────┐  SSH (clé RSA)  ┌────────────────┐  │
+│   │    VM1 — Control     │ ──────────────► │  VM2 — Managed │  │
+│   │  client.lab.local    │                 │server.lab.local│  │
+│   │   192.168.10.1       │ ◄──────────────  │  192.168.10.2 │  │
+│   │  user: ansible 🤖    │    Réponses     │ user: ansible  │  │
+│   │  [Ansible Engine]    │                 │  [Apache/App]  │  │
+│   └──────────────────────┘                 └────────────────┘  │
+│                                                                 │
+│   💡 L'utilisateur "ansible" dispose des droits sudo sans      │
+│      mot de passe sur les deux machines.                        │
+└────────────────────────────────────────────────────────────────┘
+```
+
+> [IMAGE_ICI — Capture d'écran : Vue des deux VMs actives dans votre hyperviseur (VirtualBox)]
+
+---
+
+## 👤 Étape 1 — Création de l'utilisateur `ansible`
+
+> 📍 **Effectuer sur : LES DEUX VMs** — `client.lab.local` ET `server.lab.local`
+
+L'utilisateur `ansible` est le compte système **dédié à toutes les opérations d'automatisation**. Il doit exister sur chaque machine du lab et disposer des droits `sudo` sans mot de passe pour que les playbooks s'exécutent de façon non interactive.
+
+---
+
+### 1.1 — Créer l'utilisateur `ansible`
 
 ```bash
-# Sur client.lab.local
-dnf install -y ansible-core
+# Créer l'utilisateur ansible avec un répertoire home et un shell bash
+sudo useradd -m -s /bin/bash ansible
 
-# Cloner le projet
-git clone https://github.com/[TON-USER]/rhcsa-lab-rhel9
-cd rhcsa-lab-rhel9/ansible
+# Définir un mot de passe (nécessaire pour la première connexion SSH)
+sudo passwd ansible
+# → Saisir et confirmer le mot de passe souhaité
 ```
 
-### Exécution
+### 1.2 — Accorder les droits sudo sans mot de passe
 
 ```bash
-# 1. Tester la connectivité Ansible
-ansible all -m ping
+# Créer un fichier dédié dans sudoers.d (bonne pratique, évite de modifier /etc/sudoers)
+sudo tee /etc/sudoers.d/ansible << EOF
+# Permissions sudo sans mot de passe pour l'automatisation Ansible
+ansible ALL=(ALL) NOPASSWD: ALL
+EOF
 
-# 2. Vérifier le playbook (dry-run)
-ansible-playbook playbooks/install_apache.yml --check
+# Appliquer les permissions correctes (obligatoire)
+sudo chmod 440 /etc/sudoers.d/ansible
 
-# 3. Déployer Apache
-ansible-playbook playbooks/install_apache.yml
-
-# 4. Valider le déploiement
-curl http://192.168.10.10
+# Vérifier la syntaxe du fichier pour éviter tout blocage sudo
+sudo visudo -c
+# Résultat attendu : /etc/sudoers: parsed OK
 ```
+
+### 1.3 — Vérifier les droits sudo de l'utilisateur `ansible`
+
+```bash
+# Basculer vers l'utilisateur ansible
+su - ansible
+
+# Tester l'élévation sudo (aucun mot de passe ne doit être demandé)
+sudo whoami
+# Résultat attendu : root
+
+# Tester une commande système avec droits root
+sudo systemctl status sshd
+
+# Revenir à votre utilisateur initial
+exit
+```
+
+### 1.4 — Vérifier la création de l'utilisateur
+
+```bash
+# Vérifier l'UID, GID et les groupes
+id ansible
+# Résultat attendu :
+# uid=1001(ansible) gid=1001(ansible) groups=1001(ansible)
+
+# Vérifier l'entrée dans /etc/passwd
+grep ansible /etc/passwd
+# ansible:x:1001:1001::/home/ansible:/bin/bash
+
+# Vérifier l'existence du répertoire home
+ls -la /home/ansible/
+```
+
+> [IMAGE_ICI — Capture d'écran : Résultat de `id ansible` et `sudo whoami` retournant `root` sur les deux VMs]
+
+> ⚠️ **Important :** Répéter toutes les commandes de cette étape sur **les deux machines** avant de continuer.
 
 ---
 
-## 📁 Structure du Projet
+## ⚙️ Étape 2 — Installation d'Ansible
 
+> 📍 **Effectuer sur :** `client.lab.local` (VM1 — Control Node) **en tant qu'utilisateur `ansible`**
+
+```bash
+# Basculer vers l'utilisateur ansible
+su - ansible
+
+# Vérifier l'identité active
+whoami
+# → ansible
 ```
-rhcsa-lab-rhel9/
-├── README.md
-├── LICENSE
-│
-├── docs/
-│   ├── LAB_RHCSA_RHEL9_Serge_TOGNON.docx   ← Guide complet (70+ pages)
-│   └── screenshots/
-│       ├── 01_network_config.png
-│       ├── 02_ssh_keygen.png
-│       ├── 03_ansible_ping.png
-│       ├── 04_playbook_run.png
-│       └── 05_apache_running.png
-│
-├── ansible/
-│   ├── ansible.cfg                          ← Configuration Ansible
-│   ├── inventory/
-│   │   └── hosts.ini                        ← Inventaire statique
-│   └── playbooks/
-│       ├── install_apache.yml               ← Déploiement Apache
-│       ├── manage_services.yml              ← Gestion systemd
-│       └── site.yml                         ← Playbook master
-│
-├── scripts/
-│   ├── setup_client.sh                      ← Init nœud contrôle
-│   ├── setup_server.sh                      ← Init nœud géré
-│   └── validate_lab.sh                      ← Validation complète
-│
-└── configs/
-    ├── network/
-    │   ├── ifcfg-eth0-client
-    │   └── ifcfg-eth0-server
-    └── ssh/
-        └── sshd_config.hardened
+
+### 2.1 — Activer le dépôt EPEL et installer Ansible
+
+```bash
+# Installer le dépôt EPEL (Extra Packages for Enterprise Linux)
+sudo dnf install -y epel-release
+
+# Mettre à jour le système
+sudo dnf update -y
+
+# Installer Ansible
+sudo dnf install -y ansible
+
+# Vérifier l'installation
+ansible --version
 ```
+
+### 2.2 — Vérifier la version installée
+
+```bash
+ansible --version
+# Résultat attendu :
+# ansible [core 2.x.x]
+#   config file = /etc/ansible/ansible.cfg
+#   configured module search path = ['/home/ansible/.ansible/plugins/modules']
+#   python version = 3.x.x
+```
+
+> [IMAGE_ICI — Capture d'écran : Sortie de `ansible --version` exécuté sous l'utilisateur `ansible`]
 
 ---
 
-## 🔧 Configuration Réseau
+## 🔑 Étape 3 — Configuration SSH par Clé
 
-### client.lab.local — Nœud de Contrôle
-
-```bash
-nmcli connection modify enp0s3 \
-  ipv4.method manual \
-  ipv4.addresses 192.168.10.1/24 \
-  ipv4.gateway 192.168.10.254 \
-  connection.autoconnect yes
-
-nmcli connection up enp0s3
-hostnamectl set-hostname client.lab.local
-```
-
-### server.lab.local — Nœud Géré
+> 📍 **Effectuer sur :** `client.lab.local` (VM1) **en tant qu'utilisateur `ansible`**
 
 ```bash
-nmcli connection modify enp0s3 \
-  ipv4.method manual \
-  ipv4.addresses 192.168.10.10/24 \
-  ipv4.gateway 192.168.10.254 \
-  connection.autoconnect yes
-
-nmcli connection up enp0s3
-hostnamectl set-hostname server.lab.local
+# S'assurer d'être connecté en tant qu'ansible
+whoami   # → ansible
 ```
 
-### /etc/hosts (sur les deux VMs)
+### 3.1 — Générer la paire de clés SSH pour `ansible`
 
+```bash
+# Générer une paire de clés RSA 4096 bits
+ssh-keygen -t rsa -b 4096 -C "ansible@client.lab.local"
+
+# Appuyer sur Entrée pour accepter le chemin par défaut :
+#   /home/ansible/.ssh/id_rsa      ← clé privée
+#   /home/ansible/.ssh/id_rsa.pub  ← clé publique
+
+# Laisser la passphrase VIDE (l'automatisation ne peut pas saisir de mot de passe)
 ```
-192.168.10.1    client.lab.local  client
-192.168.10.10   server.lab.local  server
+
+### 3.2 — Configurer `/etc/hosts` (si DNS non disponible)
+
+```bash
+# Sur les DEUX VMs, ajouter les résolutions de noms
+sudo tee -a /etc/hosts << EOF
+192.168.10.1  client.lab.local  client
+192.168.10.2  server.lab.local  server
+EOF
+
+# Vérifier les entrées ajoutées
+grep lab /etc/hosts
 ```
+
+### 3.3 — Copier la clé publique vers le Managed Node
+
+```bash
+# Copier la clé publique de l'utilisateur ansible vers server.lab.local
+# (le mot de passe d'ansible sur VM2 sera demandé une dernière fois)
+ssh-copy-id -i /home/ansible/.ssh/id_rsa.pub ansible@192.168.10.2
+
+# Résultat attendu :
+# Number of key(s) added: 1
+# Now try logging into the machine: "ssh ansible@192.168.10.2"
+```
+
+### 3.4 — Tester la connexion SSH sans mot de passe
+
+```bash
+# Connexion SSH (aucun mot de passe ne doit être demandé)
+ssh ansible@server.lab.local
+
+# Une fois connecté sur VM2, vérifier l'identité et les droits sudo
+whoami          # → ansible
+sudo whoami     # → root
+
+# Revenir sur le control node
+exit
+```
+
+> [IMAGE_ICI — Capture d'écran : Connexion `ssh ansible@server.lab.local` sans mot de passe et `sudo whoami` retournant `root`]
 
 ---
 
-## 🔑 Configuration SSH par Clé
+## 📦 Étape 4 — Création de l'Inventaire
+
+> 📍 **Effectuer sur :** `client.lab.local` (VM1) **en tant qu'utilisateur `ansible`**
+
+### 4.1 — Créer le répertoire du projet
 
 ```bash
-# Sur client.lab.local, en tant qu'utilisateur ansible
-ssh-keygen -t ed25519 -C "ansible@lab.rhcsa" -f ~/.ssh/id_ed25519
-
-# Copier la clé publique sur le serveur
-ssh-copy-id -i ~/.ssh/id_ed25519.pub ansible@server.lab.local
-
-# Test : connexion sans mot de passe
-ssh ansible@server.lab.local hostname
-# → server.lab.local
+# Créer le répertoire de travail dans le home de l'utilisateur ansible
+mkdir -p /home/ansible/ansible-lab && cd /home/ansible/ansible-lab
 ```
 
----
+### 4.2 — Créer le fichier d'inventaire
 
-## 🤖 Ansible — Inventaire & Configuration
-
-### ansible/inventory/hosts.ini
+```bash
+nano inventory.ini
+```
 
 ```ini
+# inventory.ini — Inventaire Ansible du lab RHCSA
+# Utilisateur de connexion dédié : ansible
+
 [webservers]
-server.lab.local ansible_host=192.168.10.10
+server.lab.local ansible_host=192.168.10.2
 
 [all:vars]
 ansible_user=ansible
-ansible_ssh_private_key_file=~/.ssh/id_ed25519
+ansible_ssh_private_key_file=/home/ansible/.ssh/id_rsa
 ansible_python_interpreter=/usr/bin/python3
 ```
 
-### ansible/ansible.cfg
+### 4.3 — Créer le fichier de configuration Ansible
+
+```bash
+nano ansible.cfg
+```
 
 ```ini
+# ansible.cfg — Configuration locale du projet Ansible Lab RHCSA
+
 [defaults]
-inventory         = ./inventory/hosts.ini
-remote_user       = ansible
+inventory        = ./inventory.ini
+remote_user      = ansible
+private_key_file = /home/ansible/.ssh/id_rsa
 host_key_checking = False
-forks             = 5
-log_path          = ./ansible.log
 
 [privilege_escalation]
 become          = True
 become_method   = sudo
 become_user     = root
-become_ask_pass = False
+become_ask_pass = False   # Pas de mot de passe grâce à la config sudoers
 ```
 
----
-
-## 📋 Playbook Apache (résumé)
-
-Le playbook `install_apache.yml` réalise les actions suivantes :
-
-1. **Afficher les facts** — OS, IP, kernel du nœud cible
-2. **Installer httpd** — via le module `ansible.builtin.dnf`
-3. **Créer le répertoire web** — avec contexte SELinux `httpd_sys_content_t`
-4. **Déployer une page d'accueil** — personnalisée avec les facts Ansible
-5. **Configurer firewalld** — ouverture port 80/tcp
-6. **Activer Apache** — `systemd` : started + enabled
-7. **Vérifier le déploiement** — requête HTTP via `ansible.builtin.uri`
-8. **Handler** — redémarrage Apache si la config change
+### 4.4 — Tester la connectivité avec un ping Ansible
 
 ```bash
-# Exécution
-ansible-playbook playbooks/install_apache.yml -v
+# Lancer depuis /home/ansible/ansible-lab
+ansible all -m ping
 
-# Résultat attendu
-# PLAY RECAP ****************************
-# server.lab.local : ok=8  changed=5  unreachable=0  failed=0
+# Résultat attendu :
+# server.lab.local | SUCCESS => {
+#     "changed": false,
+#     "ping": "pong"
+# }
 ```
 
----
-
-## ✅ Checklist de Validation
+### 4.5 — Vérifier les facts du Managed Node
 
 ```bash
-# Script de validation global
-bash scripts/validate_lab.sh
+# Récupérer les informations système de distribution
+ansible all -m setup -a "filter=ansible_distribution*"
+```
 
-# Vérifications manuelles
-ping -c 2 server.lab.local                          # Réseau OK
-ssh ansible@server.lab.local hostname               # SSH sans mot de passe
-ansible all -m ping                                 # Ansible OK
-ansible all -m command -a 'systemctl is-active httpd'  # Apache actif
-curl -s -o /dev/null -w "%{http_code}" http://192.168.10.10  # HTTP 200
-getenforce                                          # SELinux Enforcing
+> [IMAGE_ICI — Capture d'écran : Résultat du `ansible all -m ping` avec la réponse "pong" sous l'utilisateur `ansible`]
+
+---
+
+## 📜 Étape 5 — Premier Playbook
+
+> 📍 **Effectuer sur :** `client.lab.local` (VM1) **en tant qu'utilisateur `ansible`**
+
+```bash
+cd /home/ansible/ansible-lab
+```
+
+### 5.1 — Créer le playbook d'installation d'Apache
+
+```bash
+nano install_apache.yml
+```
+
+```yaml
+---
+# install_apache.yml — Playbook d'installation du serveur web Apache
+# Auteur    : ansible@client.lab.local
+# Objectif  : Installer, configurer et démarrer Apache sur les webservers
+# Exécution : ansible-playbook install_apache.yml
+
+- name: 🌐 Installation et Configuration du Serveur Web Apache
+  hosts: webservers
+  remote_user: ansible      # Connexion SSH avec l'utilisateur dédié ansible
+  become: true              # Élévation en root via sudo (sans mot de passe)
+  become_method: sudo
+  become_user: root
+
+  vars:
+    http_port: 80
+    web_root: /var/www/html
+    server_name: "{{ inventory_hostname }}"
+
+  tasks:
+
+    - name: 📦 Installer le package httpd (Apache)
+      ansible.builtin.dnf:
+        name: httpd
+        state: present
+
+    - name: 🔥 Ouvrir le port HTTP dans le pare-feu
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        state: enabled
+        immediate: true
+
+    - name: 📄 Déployer la page d'accueil personnalisée
+      ansible.builtin.copy:
+        dest: "{{ web_root }}/index.html"
+        content: |
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <title>Ansible Lab — RHCSA</title>
+            </head>
+            <body>
+              <h1>🚀 Déployé automatiquement par Ansible !</h1>
+              <hr>
+              <p>👤 Exécuté par l'utilisateur : <strong>ansible</strong></p>
+              <p>🖥️ Control Node : <strong>client.lab.local (192.168.10.1)</strong></p>
+              <p>🎯 Managed Node : <strong>{{ server_name }} (192.168.10.2)</strong></p>
+              <p>📅 Déployé le : {{ ansible_date_time.date }}</p>
+            </body>
+          </html>
+        owner: apache
+        group: apache
+        mode: '0644'
+
+    - name: ✅ Démarrer et activer le service Apache au démarrage
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: true
+
+    - name: 🔍 Vérifier qu'Apache répond sur le port {{ http_port }}
+      ansible.builtin.uri:
+        url: "http://{{ ansible_host }}"
+        status_code: 200
+      register: http_result
+
+    - name: 📊 Afficher le résultat de la vérification HTTP
+      ansible.builtin.debug:
+        msg: "✅ Apache opérationnel sur {{ server_name }} — Code HTTP : {{ http_result.status }}"
+```
+
+### 5.2 — Valider la syntaxe avant exécution
+
+```bash
+ansible-playbook install_apache.yml --syntax-check
+# Résultat attendu :
+# playbook: install_apache.yml   ← Aucune erreur
+```
+
+### 5.3 — Exécuter le playbook
+
+```bash
+# Simulation (dry-run) — aperçu des changements sans les appliquer
+ansible-playbook install_apache.yml --check
+
+# Exécution réelle
+ansible-playbook install_apache.yml
+
+# Exécution verbeuse (recommandé pour l'apprentissage)
+ansible-playbook install_apache.yml -v
+```
+
+### 5.4 — Structure finale du projet
+
+```
+/home/ansible/ansible-lab/
+│
+├── 📄 ansible.cfg           # Config : user ansible, sudo sans mdp, clés SSH
+├── 📋 inventory.ini         # Inventaire : managed nodes et variables
+├── 📜 install_apache.yml    # Playbook : installation et déploiement Apache
+│
+└── 📁 roles/                # (répertoire pour les labs avancés)
+```
+
+> [IMAGE_ICI — Capture d'écran : Sortie complète d'`ansible-playbook install_apache.yml` avec tous les tasks en vert (OK / Changed)]
+
+> [IMAGE_ICI — Capture d'écran : Page web Apache affichée dans un navigateur à l'adresse `http://192.168.10.2`]
+
+---
+
+## 🔄 Récapitulatif du Flux Complet
+
+```
+     VM1 & VM2                  VM1 (Control)             VM2 (Managed)
+─────────────────────────────────────────────────────────────────────────
+[Étape 1]
+Créer user ansible    →   useradd ansible           useradd ansible
+Configurer sudoers    →   sudoers.d/ansible          sudoers.d/ansible
+Tester sudo           →   sudo whoami → root ✅       sudo whoami → root ✅
+
+[Étape 2]
+Installer Ansible     →   dnf install ansible        (non requis)
+
+[Étape 3]
+Générer clé SSH       →   ssh-keygen (ansible)
+Copier clé publique   →   ssh-copy-id ────────────►  ~/.ssh/authorized_keys
+Tester connexion      →   ssh ansible@server ──────►  connexion sans mdp ✅
+
+[Étape 4]
+Inventaire & Config   →   inventory.ini
+                          ansible.cfg (user: ansible)
+Test ping             →   ansible all -m ping ──────► pong ✅
+
+[Étape 5]
+Exécuter playbook     →   ansible-playbook ──────────► Install httpd
+(user: ansible)                                         Ouvre firewall HTTP
+(become: root)                                          Deploy index.html
+                                                        Start httpd ✅
+                                                        Vérif HTTP 200 ✅
 ```
 
 ---
 
-## ⚠️ Erreurs Fréquentes & Solutions
+## 👨‍💻 Auteur
 
-| Erreur | Cause | Solution |
-|--------|-------|----------|
-| `UNREACHABLE! port 22` | sshd non démarré | `systemctl enable --now sshd` |
-| `Permission denied (publickey)` | Clé SSH non copiée | `ssh-copy-id ansible@server` |
-| `sudo: password required` | NOPASSWD manquant | Ajouter dans `/etc/sudoers.d/ansible` |
-| `dnf lock error` | Processus dnf actif | `kill $(cat /var/run/dnf.pid)` |
-| `SELinux preventing httpd` | Contexte incorrect | `restorecon -Rv /var/www/html/` |
-| `ansible.posix not found` | Collection manquante | `ansible-galaxy collection install ansible.posix` |
+<div align="center">
 
----
+| | |
+|---|---|
+| 👨‍💻 **Nom** | Serge TOGNON |
+| 💼 **LinkedIn** | https://www.linkedin.com/in/serge-tognon-a63443187/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BDxJkd3wUQV2zaekLKp2JnQ%3D%3D |
+| 🎯 **Objectif** | Certification RHCSA — Red Hat Certified System Administrator |
+| 🛠️ **Stack** | Ansible · RHEL · Linux · SSH · Bash · YAML |
 
-## 📸 Captures d'Écran
-
-| Screenshot | Description |
-|-----------|-------------|
-| `01_network_config.png` | `ip addr show` — IPs statiques configurées |
-| `02_ssh_keygen.png` | Génération clé Ed25519 + `ssh-copy-id` |
-| `03_ansible_ping.png` | `ansible all -m ping` → `SUCCESS => pong` |
-| `04_playbook_run.png` | PLAY RECAP du playbook Apache |
-| `05_apache_running.png` | `systemctl status httpd` + `curl` HTTP 200 |
+</div>
 
 ---
 
-## 📚 Documentation Complète
+## 🎓 Conclusion RHCSA
 
-Le guide détaillé (70+ pages) est disponible dans `docs/LAB_RHCSA_RHEL9_Serge_TOGNON.docx` :
+Ce laboratoire couvre des compétences **directement alignées sur les objectifs de l'examen RHCSA (EX200)** de Red Hat :
 
-- Explications techniques de chaque commande
-- Tableaux de référence complets
-- Gestion SELinux et firewalld
-- Top 10 erreurs RHCSA avec solutions
-- Conseils publication GitHub/LinkedIn
-- Annexes : modules Ansible, fichiers de config RHEL 9
+| ✅ Compétence RHCSA | 🔧 Couverte dans ce Lab | 📍 Étape |
+|---|---|---|
+| Création et gestion d'utilisateurs | `useradd`, `passwd`, `id` | Étape 1 |
+| Gestion des privilèges (`sudo`) | `sudoers.d`, `NOPASSWD` | Étape 1 |
+| Gestion des paquets avec `dnf` | Installation d'Ansible & Apache | Étapes 2 & 5 |
+| Configuration SSH par clé | `ssh-keygen`, `ssh-copy-id` | Étape 3 |
+| Automatisation avec des outils | Ansible (inventaire, playbook) | Étapes 4 & 5 |
+| Gestion des services (`systemctl`) | Module `service` — Apache | Étape 5 |
+| Configuration du pare-feu | Module `firewalld` — port HTTP | Étape 5 |
+| Création et gestion de fichiers | Module `copy` — index.html | Étape 5 |
 
----
 
-## 🛠️ Technologies
-
-![Red Hat](https://img.shields.io/badge/Red_Hat-EE0000?style=flat-square&logo=redhat&logoColor=white)
-![Ansible](https://img.shields.io/badge/Ansible-EE0000?style=flat-square&logo=ansible&logoColor=white)
-![Apache](https://img.shields.io/badge/Apache-D22128?style=flat-square&logo=apache&logoColor=white)
-![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black)
-![Python](https://img.shields.io/badge/Python_3-3776AB?style=flat-square&logo=python&logoColor=white)
-![OpenSSH](https://img.shields.io/badge/OpenSSH-000000?style=flat-square&logo=openssh&logoColor=white)
 
 ---
 
-## 👤 Auteur
+<div align="center">
 
-**Serge TOGNON**
+**⭐ Si ce lab vous a été utile, n'hésitez pas à mettre une étoile sur le repo !**
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](INSÉRER_LIEN_LINKEDIN)
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](INSÉRER_LIEN_GITHUB)
 
-- 🏆 **AZ-104** — Microsoft Azure Administrator
-- 🎯 **RHCSA (EX200)** — En cours de préparation
-- 🐧 Linux | ☁️ Cloud | 🤖 DevOps
-
----
-
-## 📄 Licence
-
-Ce projet est sous licence [MIT](LICENSE) — libre d'utilisation pour votre propre préparation RHCSA.
-
----
-
-> *"La maîtrise de Linux commence par la compréhension de chaque commande, pas par leur mémorisation."*
-> — Serge TOGNON
+</div>
