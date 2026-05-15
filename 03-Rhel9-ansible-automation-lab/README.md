@@ -17,7 +17,7 @@
 
 *Laboratoire pratique d'automatisation pour la préparation à la certification RHCSA*
 
-</div>
+
 
 ---
 
@@ -121,7 +121,9 @@ sudo systemctl status sshd
 
 # Revenir à votre utilisateur initial
 exit
+
 <img width="618" height="293" alt="D" src="https://github.com/user-attachments/assets/13c86b90-dbd4-49ea-8e05-21004e4f57ac" />
+
 <img width="640" height="270" alt="G" src="https://github.com/user-attachments/assets/8b68907e-c068-45b4-b7f6-5db1e1771964" />
 
 
@@ -536,4 +538,4 @@ Ce laboratoire couvre des compétences **directement alignées sur les objectifs
 **⭐ Si ce lab vous a été utile, n'hésitez pas à mettre une étoile sur le repo !**
 
 
-</div>
+
