@@ -8,7 +8,7 @@
 ║        Automatisation Linux | Red Hat | Infrastructure        ║
 ╚═══════════════════════════════════════════════════════════════╝
 ```
-
+</div>
 ![Ansible](https://img.shields.io/badge/Ansible-EE0000?style=for-the-badge&logo=ansible&logoColor=white)
 ![RHEL](https://img.shields.io/badge/RHEL-CC0000?style=for-the-badge&logo=red-hat&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
@@ -529,7 +529,7 @@ Ce laboratoire couvre des compétences **directement alignées sur les objectifs
 | Configuration du pare-feu | Module `firewalld` — port HTTP | Étape 5 |
 | Création et gestion de fichiers | Module `copy` — index.html | Étape 5 |
 
-
+<div/>
 
 ---
 
