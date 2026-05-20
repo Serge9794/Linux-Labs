@@ -8,17 +8,17 @@
 ║        Automatisation Linux | Red Hat | Infrastructure        ║
 ╚═══════════════════════════════════════════════════════════════╝
 ```
-</div>
-![Ansible](https://img.shields.io/badge/Ansible-EE0000?style=for-the-badge&logo=ansible&logoColor=white)
-![RHEL](https://img.shields.io/badge/RHEL-CC0000?style=for-the-badge&logo=red-hat&logoColor=white)
-![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
-![SSH](https://img.shields.io/badge/SSH-4D4D4D?style=for-the-badge&logo=gnubash&logoColor=white)
-![RHCSA](https://img.shields.io/badge/RHCSA-Exam_Ready-009639?style=for-the-badge)
+
+![Ansible](https://img.shields.io/badge/Ansible-EE0000.svg?style=for-the-badge&logo=ansible&logoColor=white)
+![RHEL](https://img.shields.io/badge/RHEL-CC0000.svg?style=for-the-badge&logo=red-hat&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-FCC624.svg?style=for-the-badge&logo=linux&logoColor=black)
+![SSH](https://img.shields.io/badge/SSH-4D4D4D.svg?style=for-the-badge&logo=gnubash&logoColor=white)
+![RHCSA](https://img.shields.io/badge/RHCSA-Exam_Ready-009639.svg?style=for-the-badge)
 
 *Laboratoire pratique d'automatisation pour la préparation à la certification RHCSA*
 
 
-
+</div>
 ---
 
 ## 📋 Table des Matières
@@ -197,7 +197,10 @@ ansible --version
 #   python version = 3.x.x
 ```
 
-> [IMAGE_ICI — Capture d'écran : Sortie de `ansible --version` exécuté sous l'utilisateur `ansible`]
+<img width="647" height="186" alt="O" src="https://github.com/user-attachments/assets/a4b4df42-ca98-4097-8e65-4a7d82d5ec4e" />
+
+
+
 
 ---
 
@@ -214,7 +217,7 @@ whoami   # → ansible
 
 ```bash
 # Générer une paire de clés RSA 4096 bits
-ssh-keygen -t rsa -b 4096 -C "ansible@client.lab.local"
+ssh-keygen 
 
 # Appuyer sur Entrée pour accepter le chemin par défaut :
 #   /home/ansible/.ssh/id_rsa      ← clé privée
@@ -262,7 +265,8 @@ sudo whoami     # → root
 exit
 ```
 
-> [IMAGE_ICI — Capture d'écran : Connexion `ssh ansible@server.lab.local` sans mot de passe et `sudo whoami` retournant `root`]
+<img width="692" height="353" alt="P" src="https://github.com/user-attachments/assets/3dc3ad53-e848-4ad8-b121-95f0e6eb7b4e" />
+
 
 ---
 
@@ -338,7 +342,7 @@ ansible all -m ping
 ansible all -m setup -a "filter=ansible_distribution*"
 ```
 
-> [IMAGE_ICI — Capture d'écran : Résultat du `ansible all -m ping` avec la réponse "pong" sous l'utilisateur `ansible`]
+<img width="644" height="407" alt="Q" src="https://github.com/user-attachments/assets/02d2e52e-e789-4a98-99f9-707cd5df7fde" />
 
 ---
 
@@ -397,7 +401,7 @@ nano install_apache.yml
           <html>
             <head>
               <meta charset="UTF-8">
-              <title>Ansible Lab — RHCSA</title>
+              <title>Ansible Lab — RHCSA DE SERGE</title>
             </head>
             <body>
               <h1>🚀 Déployé automatiquement par Ansible !</h1>
@@ -461,8 +465,8 @@ ansible-playbook install_apache.yml -v
 │
 └── 📁 roles/                # (répertoire pour les labs avancés)
 ```
+<img width="661" height="411" alt="R" src="https://github.com/user-attachments/assets/161c51c6-560e-4ea0-8ecc-5f8571d030e0" />
 
-> [IMAGE_ICI — Capture d'écran : Sortie complète d'`ansible-playbook install_apache.yml` avec tous les tasks en vert (OK / Changed)]
 
 > [IMAGE_ICI — Capture d'écran : Page web Apache affichée dans un navigateur à l'adresse `http://192.168.10.2`]
 
@@ -508,7 +512,7 @@ Exécuter playbook     →   ansible-playbook ──────────► 
 | | |
 |---|---|
 | 👨‍💻 **Nom** | Serge TOGNON |
-| 💼 **LinkedIn** | https://www.linkedin.com/in/serge-tognon-a63443187/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BDxJkd3wUQV2zaekLKp2JnQ%3D%3D |
+| 💼 **LinkedIn** | serge TOGNON|
 | 🎯 **Objectif** | Certification RHCSA — Red Hat Certified System Administrator |
 | 🛠️ **Stack** | Ansible · RHEL · Linux · SSH · Bash · YAML |
 
@@ -537,7 +541,7 @@ Ce laboratoire couvre des compétences **directement alignées sur les objectifs
 
 <div align="center">
 
-**⭐ Si ce lab vous a été utile, n'hésitez pas à mettre une étoile sur le repo !**
+
 
 
 
