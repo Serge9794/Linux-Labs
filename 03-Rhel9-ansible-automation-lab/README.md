@@ -468,7 +468,11 @@ ansible-playbook install_apache.yml -v
 <img width="661" height="411" alt="R" src="https://github.com/user-attachments/assets/161c51c6-560e-4ea0-8ecc-5f8571d030e0" />
 
 
-> [IMAGE_ICI — Capture d'écran : Page web Apache affichée dans un navigateur à l'adresse `http://192.168.10.2`]
+<img width="644" height="292" alt="W" src="https://github.com/user-attachments/assets/bb129a6d-2fad-4462-aa19-4b9f55a97c6e" />
+
+<img width="652" height="227" alt="X" src="https://github.com/user-attachments/assets/3cef2a43-bfe6-404b-8488-0b5c006246fb" />
+
+
 
 ---
 
@@ -542,6 +546,43 @@ Ce laboratoire couvre des compétences **directement alignées sur les objectifs
 <div align="center">
 
 
+# Retour d'Expérience (REX) : Difficultés Rencontrées et Vérifications
 
+Ce document récapitule l'incident survenu lors du déploiement automatisé du serveur Web Apache (`httpd`) via Ansible sur l'environnement de lab **RHCSA de SERGE**, ainsi que les étapes de diagnostic et les validations finales permettant de confirmer le bon fonctionnement du service.
+
+---
+
+## 1. Difficultés Rencontrées & Résolution
+
+### Problématique Initiale
+Lors de l'exécution du playbook Ansible, la tâche de démarrage et d'activation d'Apache a échoué avec le message d'erreur suivant :
+* **Tâche impactée :** `[Démarrer et activer le service Apache au démarrage]`
+* **Statut :** `FAILED!`
+* **Message d'erreur système :** `Job for httpd.service failed because the control process exited with error code.`
+  <img width="652" height="402" alt="S" src="https://github.com/user-attachments/assets/4551c8e0-3f4c-4178-94f1-90ecfde09de2" />
+
+
+### Diagnostic sur le Serveur Cible (`server.lab.local`)
+L'analyse des journaux d'erreur à l'aide de la commande `sudo systemctl status httpd` a mis en évidence un conflit d'allocation de ressources réseau :
+```text
+(98)Address already in use: AH00072: make_sock: could not bind to address
+no listening sockets available, shutting down
+AH00015: Unable to open logs
+<img width="680" height="415" alt="T" src="https://github.com/user-attachments/assets/f287ab41-b787-4b96-9378-b39920e975d5" />
+
+Pour identifier précisément le processus responsable de l'occupation du port réseau, la commande de diagnostic suivante a été exécutée :
+
+```bash
+ sudo ss -tulnp | grep :80
+
+
+```
+**Résultat du diagnostic et la correction :** Le serveur Web **Nginx** était actif et écoutait déjà sur le port 80 (0.0.0.0:80 et [::]:80), créant un conflit d'accès et bloquant l'initialisation d'Apache.
+```
+<img width="652" height="227" alt="X" src="https://github.com/user-attachments/assets/87b30ea0-7cb7-4d7c-81c5-48c756a52606" />
+<img width="644" height="292" alt="W" src="https://github.com/user-attachments/assets/ce0f816a-b168-43dd-ac85-bf8469a377fc" />
+<img width="644" height="99" alt="V" src="https://github.com/user-attachments/assets/973b94c9-3295-420e-8e4a-c7a0f5234fbe" />
+_ **
+<img width="644" height="331" alt="U" src="https://github.com/user-attachments/assets/5d1e96b1-a5c2-40cd-8c3a-9eb3f4f7692f" />
 
 
