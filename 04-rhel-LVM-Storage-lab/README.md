@@ -105,7 +105,8 @@ LVM introduit une couche d'abstraction entre le matériel physique et le systèm
 
 **Explication :** `df` (disk free) affiche l'utilisation de l'espace pour chaque système de fichiers monté. L'option `-h` (human-readable) convertit les octets en Ko/Mo/Go lisibles. On observe que `/dev/mapper/rhel-root` fait **47 Go** avec seulement **7% d'utilisation** — mais sans isolation, les logs applicatifs pourraient saturer cette partition.
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : résultat de `df -h` montrant `/dev/mapper/rhel-root` à 47G, 7%]**
+<img width="473" height="260" alt="A" src="https://github.com/user-attachments/assets/8d836f24-6d13-41ab-a122-ad7a597a6fca" />
+
 
 ---
 
@@ -117,7 +118,8 @@ LVM introduit une couche d'abstraction entre le matériel physique et le systèm
 
 **Explication :** `lsblk` (list block devices) affiche l'arborescence de tous les périphériques bloc du système : disques, partitions, volumes LVM. On doit voir apparaître `/dev/sdb` et `/dev/sdc` comme nouveaux disques **sans partition ni système de fichiers**, confirmant qu'ils sont disponibles pour l'initialisation LVM.
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : résultat de `lsblk` montrant sda (système), sdb et sdc (nouveaux disques vierges de 10G)]**
+<img width="649" height="178" alt="B" src="https://github.com/user-attachments/assets/7a761a5c-5643-4788-b2c8-d556d4086f28" />
+
 
 ---
 
@@ -134,7 +136,8 @@ LVM introduit une couche d'abstraction entre le matériel physique et le systèm
 
 **Explication :** `pvcreate` inscrit un en-tête LVM (PVID, taille des Physical Extents, métadonnées) au début du disque `/dev/sdb`. À partir de ce moment, LVM reconnaît ce disque comme un Physical Volume exploitable. **Attention :** Cette opération détruit toute donnée préexistante sur le disque.
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : commande `pvcreate /dev/sdb` avec le message de succès]**
+<img width="646" height="92" alt="C" src="https://github.com/user-attachments/assets/f4f9d0fb-aae3-4636-b2a1-7016773d92b5" />
+
 
 ---
 
@@ -150,12 +153,13 @@ LVM introduit une couche d'abstraction entre le matériel physique et le systèm
 ```bash
 [serge@server ~]$ sudo pvs
   PV         VG      Fmt  Attr PSize   PFree
-  /dev/sda2  rhel    lvm2 a--  <49.00g     0
+  /dev/sda3  rhel    lvm2 a--  <48.41g     0
   /dev/sdb           lvm2 ---  <10.00g <10.00g
   /dev/sdc           lvm2 ---  <10.00g <10.00g
 ```
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : commandes `pvcreate /dev/sdc` + résultat de `pvs` montrant les deux nouveaux PV]**
+<img width="649" height="109" alt="D" src="https://github.com/user-attachments/assets/9e7ec779-61d4-4e64-b9b5-4558527f3619" />
+
 
 ---
 
@@ -173,11 +177,12 @@ LVM introduit une couche d'abstraction entre le matériel physique et le systèm
 ```bash
 [serge@server ~]$ sudo vgs
   VG       #PV #LV #SN Attr   VSize   VFree
-  rhel       1   2   0 wz--n- <49.00g     0
+  rhel       1   2   0 wz--n- <48.41g     0
   vg_data    2   0   0 wz--n- <19.99g <19.99g
 ```
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : commande `vgcreate` + résultat de `vgs` montrant `vg_data` avec ~19.99G disponibles]**
+<img width="647" height="116" alt="E" src="https://github.com/user-attachments/assets/85641c16-371d-4e75-97b9-46583c64bc1a" />
+
 
 ---
 
@@ -194,7 +199,8 @@ LVM introduit une couche d'abstraction entre le matériel physique et le systèm
 
 **Explication :** `lvcreate` crée un LV nommé `lv_logs` de **5 Go exactement** dans le VG `vg_data`. L'option `-L` spécifie la taille absolue, `-n` le nom. Le LV est immédiatement accessible sous `/dev/vg_data/lv_logs` et `/dev/mapper/vg_data-lv_logs`.
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : commande `lvcreate -L 5G -n lv_logs vg_data` avec message de succès]**
+<img width="650" height="78" alt="F" src="https://github.com/user-attachments/assets/821803dc-2702-48b2-b078-1a290087635a" />
+
 
 ---
 
@@ -214,7 +220,8 @@ LVM introduit une couche d'abstraction entre le matériel physique et le systèm
   lv_logs vg_data -wi-a-----   5.00g
 ```
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : commande `lvcreate -L 10G -n lv_apps` + résultat de `lvs` montrant les deux LV]**
+<img width="646" height="119" alt="G" src="https://github.com/user-attachments/assets/69182578-7a1f-4a8c-b475-87ac725a7cb4" />
+
 
 ---
 
@@ -235,7 +242,8 @@ Writing superblocks and filesystem accounting information: done
 
 **Explication :** `mkfs.ext4` formate `lv_logs` en **EXT4**, le système de fichiers journalisé de référence sous Linux. EXT4 est choisi pour les logs car il gère efficacement un grand nombre de **petits fichiers**, offre un journaling robuste qui prévient la corruption en cas de crash, et ses outils de réparation (`fsck.ext4`) sont très matures.
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : sortie complète de `mkfs.ext4 /dev/vg_data/lv_logs`]**
+<img width="647" height="164" alt="H" src="https://github.com/user-attachments/assets/a55180fc-cbf5-4937-aa4d-b27a0157d784" />
+
 
 ---
 
@@ -251,13 +259,15 @@ realtime =none                   exts=0
 
 **Explication :** `mkfs.xfs` formate `lv_apps` en **XFS**, le système de fichiers haute performance adopté par défaut dans RHEL/Rocky Linux. XFS excelle dans la gestion de **fichiers volumineux** (binaires d'applications, bases de données, images Docker), offre un excellent parallélisme I/O et supporte nativement l'extension à chaud avec `xfs_growfs`.
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : sortie de `mkfs.xfs /dev/vg_data/lv_apps`]**
+<img width="662" height="184" alt="I" src="https://github.com/user-attachments/assets/bcf2e379-e516-4773-9887-c515f70a3db6" />
+
 
 ---
 
 ### Étape F — Configuration du Montage Persistant dans `/etc/fstab`
 
-**Objectif :** Créer les points de montage, intégrer les volumes dans `/etc/fstab` pour la persistance au redémarrage, et valider la configuration.
+**Objectif :** Créer les points de montage, intégrer les volumes dan
+s `/etc/fstab` pour la persistance au redémarrage, et valider la configuration.
 
 #### F.1 — Création des répertoires de montage
 
@@ -268,7 +278,8 @@ realtime =none                   exts=0
 
 **Explication :** `mkdir -p` crée les répertoires cibles. `/var/log/app_logs` est placé sous `/var/log/` pour suivre la convention FHS (Filesystem Hierarchy Standard) des logs système. `/mnt/applications` utilise le répertoire standard pour les montages temporaires ou applicatifs.
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : commandes `mkdir` + vérification avec `ls -ld /var/log/app_logs /mnt/applications`]**
+<img width="652" height="169" alt="J" src="https://github.com/user-attachments/assets/70237f05-03e4-4d5f-aece-ff3e1a253251" />
+
 
 ---
 
@@ -282,14 +293,14 @@ realtime =none                   exts=0
 
 **Explication :** `blkid` retourne l'UUID unique de chaque système de fichiers. **Il est impératif d'utiliser les UUID plutôt que les noms de périphériques** (`/dev/vg_data/lv_logs`) dans `/etc/fstab`. Les noms de devices peuvent changer lors d'une modification de la configuration des disques ; les UUID, eux, sont immuables.
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : résultat de `blkid` avec les UUID des deux LV]**
+<img width="644" height="56" alt="K" src="https://github.com/user-attachments/assets/e6e75df6-87d8-4819-8378-73d353351b60" />
 
----
 
+--
 #### F.3 — Ajout des entrées dans `/etc/fstab`
 
 ```bash
-[serge@server ~]$ sudo nano /etc/fstab
+[serge@server ~]$ sudo vi /etc/fstab
 ```
 
 Ajouter les lignes suivantes à la fin du fichier (remplacer les UUID par ceux obtenus via `blkid`) :
@@ -313,7 +324,8 @@ UUID=11111-2222-3333-4444-555555555555   /mnt/applications  xfs   defaults  0 2
 | `0` | Dump | 0 = pas de sauvegarde via `dump` |
 | `2` | Pass (fsck) | Ordre de vérification au boot (1=racine, 2=autres) |
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : contenu de `/etc/fstab` avec les deux nouvelles lignes visibles]**
+<img width="658" height="248" alt="L" src="https://github.com/user-attachments/assets/1c3d1a2b-04f3-43f6-9fec-0cdbb1c18895" />
+
 
 ---
 
@@ -327,11 +339,12 @@ UUID=11111-2222-3333-4444-555555555555   /mnt/applications  xfs   defaults  0 2
 
 ```bash
 [serge@server ~]$ df -h | grep -E "app_logs|applications"
-/dev/mapper/vg_data-lv_logs  4.9G   24M  4.6G   1% /var/log/app_logs
-/dev/mapper/vg_data-lv_apps   10G  105M  9.9G   2% /mnt/applications
+/dev/mapper/vg_data-lv_logs  4.9G   24K  4.6G   1% /var/log/app_logs
+/dev/mapper/vg_data-lv_apps   10G  104M  9.9G   2% /mnt/applications
 ```
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : `mount -a` sans erreur + `df -h` confirmant les deux nouveaux points de montage]**
+<img width="650" height="175" alt="M" src="https://github.com/user-attachments/assets/6afb6f82-8a0b-42aa-8435-b5a912a6f8e1" />
+
 
 ---
 
@@ -341,7 +354,7 @@ UUID=11111-2222-3333-4444-555555555555   /mnt/applications  xfs   defaults  0 2
 
 > **⚠️ ALERTE CRITIQUE — 02:47 du matin**
 > 
-> Le système de monitoring remonte une alarme : `/var/log/app_logs` est rempli à **93%**. L'application génère des logs à un rythme anormal depuis le déploiement de la v2.3.1 il y a 6 heures. Dans 45 minutes, la partition sera pleine et l'application plantera.
+> Le système de monitoring remonte une alarme : `/var/log/app_logs` est rempli à **95%**. L'application génère des logs à un rythme anormal depuis le déploiement de la v2.3.1 il y a 6 heures. Dans 45 minutes, la partition sera pleine et l'application plantera.
 >
 > **Contrainte absolue :** Zéro interruption de service. L'application tourne 24h/24. Pas de fenêtre de maintenance possible.
 
@@ -358,26 +371,28 @@ UUID=11111-2222-3333-4444-555555555555   /mnt/applications  xfs   defaults  0 2
 ```bash
 [serge@server ~]$ df -h /var/log/app_logs
 Filesystem                    Size  Used Avail Use% Mounted on
-/dev/mapper/vg_data-lv_logs  4.9G  4.6G  186M  96% /var/log/app_logs
+/dev/mapper/vg_data-lv_logs  4.9G  4.5G  84M  99% /var/log/app_logs
 ```
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : alerte de saturation avec `df -h` montrant 96% d'utilisation]**
+
+<img width="648" height="165" alt="N" src="https://github.com/user-attachments/assets/09ce1888-e017-4d54-9dc2-0347d45dd5c9" />
 
 ---
 
 ### Procédure d'Extension à Chaud
 
-#### Étape 1 — Extension du Logical Volume de 5 Go supplémentaires
+#### Étape 1 — Extension du Logical Volume de 4,8 Go supplémentaires
 
 ```bash
-[serge@server ~]$ sudo lvextend -L +5G /dev/vg_data/lv_logs
+[serge@server ~]$ sudo lvextend -L +4,8G /dev/vg_data/lv_logs
   Size of logical volume vg_data/lv_logs changed from 5.00 GiB (1280 extents) to 10.00 GiB (2560 extents).
   Logical volume vg_data/lv_logs successfully resized.
 ```
 
-**Explication :** `lvextend -L +5G` ajoute **5 Go supplémentaires** au LV existant en prélevant les Physical Extents libres dans `vg_data`. Le signe `+` est crucial : sans lui, `-L 5G` définirait une taille absolue de 5G (ce qui réduirait le volume !). L'application continue de tourner pendant cette opération — **aucune interruption**.
+**Explication :** `lvextend -L +4,8G` ajoute **4,8 Go supplémentaires** au LV existant en prélevant les Physical Extents libres dans `vg_data`. Le signe `+` est crucial : sans lui, `-L 4,8G` définirait une taille absolue de 5G (ce qui réduirait le volume !). L'application continue de tourner pendant cette opération — **aucune interruption**.
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : commande `lvextend` avec le message de redimensionnement réussi]**
+<img width="651" height="117" alt="O" src="https://github.com/user-attachments/assets/2d1d9925-b87e-4c6f-9761-813240e1d7a8" />
+
 
 ---
 
@@ -393,7 +408,8 @@ The filesystem on /dev/vg_data/lv_logs is now 2621440 (4k) blocks long.
 
 **Explication :** `lvextend` agrandit le **conteneur** (le LV), mais le système de fichiers EXT4 ne connaît pas encore ce nouvel espace. `resize2fs` étend le FS EXT4 pour occuper **tout l'espace disponible** dans le LV. La mention "on-line resizing required" confirme que l'opération est effectuée **à chaud**, sans démonter le volume. Les données existantes sont intégralement préservées.
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : commande `resize2fs` avec la confirmation "on-line resizing"]**
+<img width="648" height="118" alt="P" src="https://github.com/user-attachments/assets/99f2521b-3ce9-405a-9284-3b7f18cab3dc" />
+
 
 > **💡 Note RHCSA :** Pour XFS (`lv_apps`), la commande équivalente serait `sudo xfs_growfs /mnt/applications`. XFS ne peut être étendu qu'à chaud (monté). `resize2fs` est spécifique à EXT2/3/4.
 
@@ -404,19 +420,20 @@ The filesystem on /dev/vg_data/lv_logs is now 2621440 (4k) blocks long.
 ```bash
 [serge@server ~]$ df -h /var/log/app_logs
 Filesystem                    Size  Used Avail Use% Mounted on
-/dev/mapper/vg_data-lv_logs  9.8G  4.6G  4.8G  49% /var/log/app_logs
+/dev/mapper/vg_data-lv_logs  9.6G  4.5G  4.7G  50% /var/log/app_logs
 ```
 
 ```bash
 [serge@server ~]$ sudo lvs vg_data
   LV      VG      Attr       LSize
   lv_apps vg_data -wi-ao----  10.00g
-  lv_logs vg_data -wi-ao----  10.00g
+  lv_logs vg_data -wi-ao----  9.80g
 ```
 
-✅ `lv_logs` est maintenant à **10 Go**, l'utilisation est tombée à **49%**. L'application n'a subi **aucune interruption**. Les logs existants sont intacts.
+✅ `lv_logs` est maintenant à **9,8 Go**, l'utilisation est tombée à **50%**. L'application n'a subi **aucune interruption**. Les logs existants sont intacts.
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : `df -h` post-extension montrant 9.8G disponibles à 49% d'utilisation]**
+<img width="643" height="170" alt="Q" src="https://github.com/user-attachments/assets/b99012b1-7ca9-4e3f-b780-ce3aaf13ff7e" />
+
 
 ---
 
@@ -425,7 +442,7 @@ Filesystem                    Size  Used Avail Use% Mounted on
 ```
 AVANT                              APRÈS
 ──────────────────────────────     ──────────────────────────────
-lv_logs : 5 Go   [████████░░] 96%  lv_logs : 10 Go  [████░░░░░░] 49%
+lv_logs : 5 Go   [████████░░] 99%  lv_logs : 9,80 Go  [████░░░░░░] 50%
 vg_data free : 5 Go                vg_data free : ~0 Go
 
 Durée totale de l'opération : < 2 minutes
@@ -520,7 +537,8 @@ Avant de redémarrer le serveur après toute modification de `/etc/fstab` ou de 
 [serge@server ~]$ df -h | grep -E "app_logs|applications"
 ```
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : test de démontage puis remontage via `mount -a` réussi]**
+<img width="666" height="143" alt="R" src="https://github.com/user-attachments/assets/93d42e60-cbc1-4ad4-b85e-acbd52e86eee" />
+
 
 ---
 
@@ -530,7 +548,8 @@ Avant de redémarrer le serveur après toute modification de `/etc/fstab` ou de 
 [serge@server ~]$ lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT,UUID
 ```
 
-> 📸 **[INSÉRER CAPTURE D'ÉCRAN : sortie de `lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT,UUID` montrant l'architecture complète]**
+<img width="665" height="209" alt="S" src="https://github.com/user-attachments/assets/346f24d2-4bc2-464a-8da7-71ef60599dc7" />
+
 
 ---
 
@@ -541,10 +560,10 @@ Avant de redémarrer le serveur après toute modification de `/etc/fstab` ou de 
 | PV `/dev/sdb` | 10 Go | ✅ Actif |
 | PV `/dev/sdc` | 10 Go | ✅ Actif |
 | VG `vg_data` | 19,99 Go | ✅ Actif |
-| LV `lv_logs` | 10 Go (EXT4) | ✅ Monté sur `/var/log/app_logs` |
+| LV `lv_logs` | 9,80 Go (EXT4) | ✅ Monté sur `/var/log/app_logs` |
 | LV `lv_apps` | 10 Go (XFS) | ✅ Monté sur `/mnt/applications` |
 | Persistance `fstab` | UUID-based | ✅ Validé via `mount -a` |
-| Extension à chaud | +5 Go EXT4 | ✅ Effectuée sans interruption |
+| Extension à chaud | +4,8 Go EXT4 | ✅ Effectuée sans interruption |
 
 ---
 
@@ -565,83 +584,3 @@ Ce projet est distribué sous licence [MIT](LICENSE). Libre d'utilisation à des
 
 *Projet réalisé dans le cadre d'une infrastructure de production réelle et d'une préparation rigoureuse à la certification Red Hat RHCSA.*
 
----
-
----
-
-## 💼 POST LINKEDIN — À COPIER-COLLER
-
----
-
-```
-🚀 J'ai résolu une crise de stockage en production à 3h du matin — sans arrêter un seul service.
-
-Voici comment LVM m'a sauvé la mise (et ce que tout SysAdmin Linux doit maîtriser) 👇
-
-───────────────────────────────────
-
-Le contexte réel :
-Notre partition /var/log montait en flèche.
-Quota : 5 Go. Utilisation soudaine : 96%.
-L'application continuait de tourner, les logs s'accumulaient.
-Fenêtre de maintenance disponible : ZÉRO.
-
-La solution en 3 commandes :
-
-💾 sudo lvextend -L +5G /dev/vg_data/lv_logs
-📐 sudo resize2fs /dev/vg_data/lv_logs
-✅ df -h → de 96% à 49%, en moins de 2 minutes, sans une seconde d'interruption.
-
-C'est exactement la puissance du Logical Volume Manager.
-
-───────────────────────────────────
-
-🏗️ L'architecture que j'ai mise en place :
-
-🔵 2 disques physiques de 10 Go (/dev/sdb + /dev/sdc)
-   ↓  pvcreate
-🟢 2 Physical Volumes (PV) enregistrés dans LVM
-   ↓  vgcreate vg_data
-🟡 1 Volume Group de ~20 Go — le pool de stockage unifié
-   ↓  lvcreate
-🔴 2 Logical Volumes indépendants :
-   • lv_logs (EXT4) → /var/log/app_logs
-   • lv_apps (XFS)  → /mnt/applications
-
-Résultat : chaque composant vit dans sa propre bulle.
-Un log qui explose ne peut plus faire tomber toute la production.
-
-───────────────────────────────────
-
-🎯 Les 3 leçons que ce projet m'a confirmées :
-
-1️⃣ Ne jamais stocker logs et apps sur la partition racine.
-   Isoler = survivre.
-
-2️⃣ LVM n'est pas un luxe, c'est le standard minimum en production Linux.
-   EXT4 pour les petits fichiers. XFS pour les gros. Toujours par UUID dans fstab.
-
-3️⃣ La vraie valeur d'un SysAdmin, c'est d'intervenir sous pression,
-   sans panique, avec méthode — et sans réveiller les équipes métier.
-
-───────────────────────────────────
-
-📂 J'ai documenté l'intégralité du projet (guide de commandes, architecture,
-check-list RHCSA, scénario d'extension à chaud) dans un README GitHub de niveau production.
-
-Le lien est dans les commentaires 👇
-
-───────────────────────────────────
-
-Et toi, quelle est la pire crise de stockage que tu aies gérée ?
-Dis-moi en commentaire 💬
-
-#Linux #RHCSA #RHCE #RedHat #DevOps #LinuxAdmin #LVM #SysAdmin
-#RockyLinux #Stockage #Infrastructure #CloudNative #OpenSource
-#AdminSystème #Engineering #TechAfrica #DevOpsEngineer
-```
-
----
-
-*✍️ Post rédigé par Serge TOGNON — Admin cloud Azure/Linux*
-*[linkedin.com/in/serge-tognon](https://www.linkedin.com/in/serge-tognon)*
