@@ -49,4 +49,4 @@ Ces labs préparent à l'examen **RHCSA (EX200)** de Red Hat, couvrant les domai
 
 **Serge TOGNON**
 Administrateur Cloud Azure Certifié (AZ-104) | Candidat RHCSA
-[LinkedIn](www.linkedin.com/in/serge-tognon-a63443187)
+[LinkedIn](https://www.linkedin.com/in/serge-tognon-a63443187/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3B7CLzfaXNRPSgO1MAAoxJ1w%3D%3D)
