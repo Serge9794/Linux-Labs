@@ -114,27 +114,30 @@ az vm show -d --resource-group $RG --name $VM_NAME --query publicIps -o tsv
 ssh $ADMIN_USER@<IP_PUBLIQUE>
 ```
 
-> 💡 En production, privilégier `francecentral` pour la conformité RGPD et un `Standard_B2s` minimum si plusieurs conteneurs sont prévus.
+<img width="917" height="389" alt="1" src="https://github.com/user-attachments/assets/ea739b20-a5aa-43da-9ca6-cde0652c94d8" />
 
-[Insérer ici : Capture d'écran du portail Azure montrant la VM et le Resource Group créés]
-```
-
-
+``
 ### 1. Installation de Podman
 
-```bash
+bash
 sudo dnf install -y podman
 podman --version
-```
+
+
+<img width="960" height="381" alt="2" src="https://github.com/user-attachments/assets/f6981a91-ce18-4207-acf2-50b3eee786a3" />
+
 
 ### 2. Création du répertoire de persistance des données
 
 On crée un répertoire local qui contiendra les fichiers HTML du site, **avant** de lancer le conteneur :
 
-```bash
+`bash
 mkdir -p ~/nginx-data/html
 echo "<h1>Bienvenue sur mon serveur Nginx conteneurisé !</h1>" > ~/nginx-data/html/index.html
-```
+
+<img width="960" height="114" alt="3" src="https://github.com/user-attachments/assets/0bde159d-e918-4c5e-9304-62fb1c08bf96" />
+
+``
 
 ### 3. Création d'un pod Podman
 
@@ -146,13 +149,13 @@ podman pod create --name webserver-pod -p 8080:80
 
 ### 4. Lancement du conteneur Nginx avec volume monté
 
-```bash
+``bash
 podman run -d \
   --pod webserver-pod \
   --name nginx-web \
   -v ~/nginx-data/html:/usr/share/nginx/html:Z \
   nginx:latest
-```
+``
 
 ### 5. Vérification
 
