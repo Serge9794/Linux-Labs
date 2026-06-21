@@ -34,7 +34,9 @@ L'objectif n'est pas seulement de faire tourner un conteneur Nginx, mais de rép
 - **Résilience** : le conteneur redémarre automatiquement avec la machine grâce à `systemd`, sans dépendre d'un démon tiers.
 - **Industrialisation** : génération du service via Podman lui-même (`podman generate systemd`), conforme aux pratiques RHEL.
 
-[Insérer ici : Capture d'écran de la page Nginx accessible depuis un navigateur]
+<img width="960" height="212" alt="B" src="https://github.com/user-attachments/assets/9327de1c-8e33-43a0-803b-cd0bf2631513" />
+
+
 
 ---
 
@@ -51,11 +53,11 @@ Sur RHEL, **Podman est l'outil de conteneurisation officiellement supporté par 
 | Intégration systemd | Native (`podman generate systemd`) | Nécessite des contournements |
 | Support Red Hat | Officiel (RHEL/OpenShift) | Non supporté nativement |
 
-L'absence de démon signifie qu'**il n'y a pas de processus root permanent** qui pourrait constituer une surface d'attaque. Chaque conteneur Podman est un processus enfant directement rattaché à l'utilisateur qui l'a lancé — ce qui s'aligne parfaitement avec le principe de moindre privilège appliqué en administration système RHEL.
+L'absence de démon signifie qu'**il n'y a pas de processus root permanent** qui pourrait constituer une surface d'attaque. Chaque conteneur Podman est un processus enfant directement rattaché à l'utilisateur qui l'a lancé , ce qui s'aligne parfaitement avec le principe de moindre privilège appliqué en administration système RHEL.
 
 ### Pourquoi Systemd plutôt qu'un script de démarrage ?
 
-`systemd` est le gestionnaire de services natif de RHEL. En générer une unité directement depuis Podman permet de :
+`systemd` est le gestionnaire de services natif de RHEL. En générant une unité directement depuis Podman permet de :
 
 - Bénéficier du redémarrage automatique en cas de crash (`Restart=on-failure`).
 - Gérer le conteneur avec les commandes standards (`systemctl start/stop/status`).
@@ -93,7 +95,7 @@ az vm create \
   --resource-group $RG \
   --name $VM_NAME \
   --image RedHat:RHEL:9-lvm:latest \
-  --size Standard_B1s \
+  --size  Standard_B2ps_v2\
   --admin-username $ADMIN_USER \
   --generate-ssh-keys \
   --public-ip-sku Standard
@@ -133,7 +135,7 @@ On crée un répertoire local qui contiendra les fichiers HTML du site, **avant*
 
 `bash
 mkdir -p ~/nginx-data/html
-echo "<h1>Bienvenue sur mon serveur Nginx conteneurisé !</h1>" > ~/nginx-data/html/index.html
+echo "<h1>Bienvenue sur mon serveur Nginx conteneurise !</h1>" > ~/nginx-data/html/index.html
 
 <img width="960" height="114" alt="3" src="https://github.com/user-attachments/assets/0bde159d-e918-4c5e-9304-62fb1c08bf96" />
 
@@ -149,12 +151,19 @@ podman pod create --name webserver-pod -p 8080:80
 
 ### 4. Lancement du conteneur Nginx avec volume monté
 
+La commande suivante permet d'instancier le serveur web au sein de l'infrastructure Pod définie précédemment. Elle respecte les principes de conteneurisation rootless (sans privilèges root) et assure la conformité avec la politique de sécurité SELinux de RHEL.
 ``bash
 podman run -d \
   --pod webserver-pod \
   --name nginx-web \
   -v ~/nginx-data/html:/usr/share/nginx/html:Z \
   nginx:latest
+  
+  **Analyse de la commande:**
+
+  --pod : Rattache le conteneur au Pod.
+
+-v ... :Z : Monte le volume avec un étiquetage SELinux privé (container_file_t) pour autoriser l'accès en mode Enforcing.
 ``
 
 ### 5. Vérification
@@ -164,7 +173,9 @@ podman ps
 curl http://localhost:8080
 ```
 
-[Insérer ici : Capture d'écran du résultat de `podman ps` et de la réponse `curl`]
+<img width="952" height="163" alt="A" src="https://github.com/user-attachments/assets/5d305a49-5ef8-44c2-a5ce-327ffb09138f" />
+
+<img width="960" height="212" alt="B" src="https://github.com/user-attachments/assets/41fc7a86-e4ce-4af9-b883-f762d7ceddcc" />
 
 ---
 
@@ -172,9 +183,9 @@ curl http://localhost:8080
 
 ### Pourquoi le flag `:Z` est-il indispensable ?
 
-Sur RHEL, **SELinux reste activé en mode `enforcing`** (bonne pratique que ce projet respecte intégralement — il n'est jamais question de passer en `permissive` ou `disabled`).
+Sur RHEL, **SELinux reste activé en mode `enforcing`** (bonne pratique que ce projet respecte intégralement ,il n'est jamais question de passer en `permissive` ou `disabled`).
 
-Par défaut, SELinux applique un **étiquetage (labeling) strict** aux fichiers. Le répertoire `~/nginx-data/html` possède un contexte SELinux de type `user_home_t`, alors que les processus conteneurisés s'exécutent avec un contexte de type `container_file_t`. Sans intervention, SELinux **bloque l'accès** du conteneur à ce volume, car les contextes ne correspondent pas — c'est le comportement attendu, pas un bug.
+Par défaut, SELinux applique un **étiquetage (labeling) strict** aux fichiers. Le répertoire `~/nginx-data/html` possède un contexte SELinux de type `user_home_t`, alors que les processus conteneurisés s'exécutent avec un contexte de type `container_file_t`. Sans intervention, SELinux **bloque l'accès** du conteneur à ce volume, car les contextes ne correspondent pas. c'est le comportement attendu, pas un bug.
 
 Le flag `:Z` (majuscule) demandé lors du montage du volume indique à Podman de :
 
@@ -182,26 +193,30 @@ Le flag `:Z` (majuscule) demandé lors du montage du volume indique à Podman de
 2. Appliquer un label **privé**, exclusif à ce conteneur (par opposition au `:z` minuscule, qui autoriserait le partage du volume entre plusieurs conteneurs).
 
 ```bash
--v ~/nginx-data/html:/usr/share/nginx/html:Z
+- v ~/nginx-data/html:/usr/share/nginx/html:Z
 ```
 
-**Sans ce flag**, la commande `curl` renverrait une erreur `403 Forbidden`, et les logs `journalctl` afficheraient des `AVC denied` — la preuve que SELinux fonctionne correctement en empêchant un accès non autorisé.
+**Sans ce flag**, la commande `curl` renverrait une erreur `403 Forbidden`, et les logs `journalctl` afficheraient des `AVC denied` , la preuve que SELinux fonctionne correctement en empêchant un accès non autorisé.
 
-### Vérifier les refus SELinux (si besoin)
+### Vérifier les refus SELinux 
 
 ```bash
 sudo ausearch -m avc -ts recent
 ```
 
-[Insérer ici : Capture d'écran d'un éventuel log AVC avant/après application du flag `:Z`]
+<img width="942" height="153" alt="C" src="https://github.com/user-attachments/assets/e41a663d-3e49-4c54-9db2-11bb3b55628e" />
+
+
+ La commande **sudo ausearch -m avc -ts recent** renvoie **<no matches>**, ce qui prouve que notre étiquetage est correct et que SELinux ne bloque aucun accès légitime.
 
 ---
 
 ## ⚙️ Automatisation avec Systemd
+L'utilisation de systemd permet de transformer un conteneur éphémère en un véritable service système robuste. En générant l'unité directement depuis Podman, nous héritons d'une gestion native du cycle de vie, du redémarrage automatique en cas d'échec (Restart=on-failure) et d'une centralisation des journaux dans journald.
 
 ### 1. Génération du fichier de service
 
-Podman peut générer lui-même l'unité systemd correspondant au pod, garantissant une intégration native :
+La commande suivante crée le fichier **.service** correspondant à votre Pod. L'option **--new** garantit que le Pod sera recréé proprement à chaque démarrage, évitant ainsi les conflits d'état.
 
 ```bash
 mkdir -p ~/.config/systemd/user/
@@ -211,13 +226,14 @@ podman generate systemd --new --name webserver-pod --files
 
 ### 2. Activation du linger (pour le mode rootless au boot)
 
-Pour qu'un service utilisateur démarre **même sans session ouverte**, il faut activer le "linger" :
+Par défaut, les services **systemd --user** s'arrêtent lorsque l'utilisateur se déconnecte. L'activation du "linger" permet au service de persister même après la fermeture de la session SSH : 
 
 ```bash
 sudo loginctl enable-linger $(whoami)
 ```
 
 ### 3. Rechargement et activation du service
+Nous rechargeons la configuration système pour prendre en compte le nouveau fichier généré, puis nous activons le service pour qu'il se lance automatiquement au démarrage de la machine :
 
 ```bash
 systemctl --user daemon-reload
@@ -225,6 +241,7 @@ systemctl --user enable --now pod-webserver-pod.service
 ```
 
 ### 4. Vérification du statut
+Vous devez obtenir un statut active (running), confirmant que le service est bien géré par l'infrastructure RHEL :
 
 ```bash
 systemctl --user status pod-webserver-pod.service
