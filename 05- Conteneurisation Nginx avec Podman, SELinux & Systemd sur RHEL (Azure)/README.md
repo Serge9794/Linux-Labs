@@ -80,17 +80,22 @@ L'absence de démon signifie qu'**il n'y a pas de processus root permanent** qui
 
 Si la VM n'existe pas encore, voici la séquence complète pour la créer depuis zéro :
 
-``bash
-# Variables 
+**Variables**
+```bash
+
 RG="rg-podman-nginx-demo"
 LOCATION="canadacentral"
 VM_NAME="vm-rhel-podman"
 ADMIN_USER="serge"
 
-# 1. Création du groupe de ressources
+```
+
+ **1. Création du groupe de ressources**
 az group create --name $RG --location $LOCATION
 
-# 2. Création de la VM RHEL 9 avec clé SSH générée automatiquement
+**2. Création de la VM RHEL 9 avec clé SSH générée automatiquement**
+```bash
+
 az vm create \
   --resource-group $RG \
   --name $VM_NAME \
@@ -99,78 +104,95 @@ az vm create \
   --admin-username $ADMIN_USER \
   --generate-ssh-keys \
   --public-ip-sku Standard
-
-# 3. Ouverture du port 8080 (Nginx via Podman) dans le NSG
+```
+ **3. Ouverture du port 8080 (Nginx via Podman) dans le NSG**
+```bash
+ 
 az vm open-port \
   --resource-group $RG \
   --name $VM_NAME \
   --port 8080 \
   --priority 1001
-
-# 4. Récupération de l'IP publique pour la connexion SSH
+```
+  **4. Récupération de l'IP publique pour la connexion SSH**
+  ```bash
 az vm show -d --resource-group $RG --name $VM_NAME --query publicIps -o tsv
 ```
 
+**5. Connexion SSH à la VM**
 ```bash
-# 5. Connexion SSH à la VM
+
 ssh $ADMIN_USER@<IP_PUBLIQUE>
 ```
 
 <img width="917" height="389" alt="1" src="https://github.com/user-attachments/assets/ea739b20-a5aa-43da-9ca6-cde0652c94d8" />
 
-``
-### 1. Installation de Podman
 
-bash
+**1. Installation de Podman**
+
+```bash
+
 sudo dnf install -y podman
 podman --version
 
+```
 
 <img width="960" height="381" alt="2" src="https://github.com/user-attachments/assets/f6981a91-ce18-4207-acf2-50b3eee786a3" />
 
 
-### 2. Création du répertoire de persistance des données
+**2. Création du répertoire de persistance des données**
 
 On crée un répertoire local qui contiendra les fichiers HTML du site, **avant** de lancer le conteneur :
 
-`bash
+```bash
+
 mkdir -p ~/nginx-data/html
+
 echo "<h1>Bienvenue sur mon serveur Nginx conteneurise !</h1>" > ~/nginx-data/html/index.html
+
+```
 
 <img width="960" height="114" alt="3" src="https://github.com/user-attachments/assets/0bde159d-e918-4c5e-9304-62fb1c08bf96" />
 
-``
 
-### 3. Création d'un pod Podman
+**3. Création d'un pod Podman**
 
 Un pod regroupe un ou plusieurs conteneurs partageant le même espace réseau (utile pour ajouter facilement un sidecar plus tard, comme un exporter Prometheus) :
 
 ```bash
+
 podman pod create --name webserver-pod -p 8080:80
+
 ```
 
-### 4. Lancement du conteneur Nginx avec volume monté
+**4. Lancement du conteneur Nginx avec volume monté**
 
 La commande suivante permet d'instancier le serveur web au sein de l'infrastructure Pod définie précédemment. Elle respecte les principes de conteneurisation rootless (sans privilèges root) et assure la conformité avec la politique de sécurité SELinux de RHEL.
-``bash
+
+```bash
+
 podman run -d \
   --pod webserver-pod \
   --name nginx-web \
   -v ~/nginx-data/html:/usr/share/nginx/html:Z \
   nginx:latest
+
+```
   
   **Analyse de la commande:**
 
   --pod : Rattache le conteneur au Pod.
 
 -v ... :Z : Monte le volume avec un étiquetage SELinux privé (container_file_t) pour autoriser l'accès en mode Enforcing.
-``
 
-### 5. Vérification
+
+**5. Vérification**
 
 ```bash
+
 podman ps
 curl http://localhost:8080
+
 ```
 
 <img width="952" height="163" alt="A" src="https://github.com/user-attachments/assets/5d305a49-5ef8-44c2-a5ce-327ffb09138f" />
@@ -193,8 +215,11 @@ Le flag `:Z` (majuscule) demandé lors du montage du volume indique à Podman de
 2. Appliquer un label **privé**, exclusif à ce conteneur (par opposition au `:z` minuscule, qui autoriserait le partage du volume entre plusieurs conteneurs).
 
 ```bash
+
 - v ~/nginx-data/html:/usr/share/nginx/html:Z
+
 ```
+
 
 **Sans ce flag**, la commande `curl` renverrait une erreur `403 Forbidden`, et les logs `journalctl` afficheraient des `AVC denied` , la preuve que SELinux fonctionne correctement en empêchant un accès non autorisé.
 
@@ -207,44 +232,89 @@ sudo ausearch -m avc -ts recent
 <img width="942" height="153" alt="C" src="https://github.com/user-attachments/assets/e41a663d-3e49-4c54-9db2-11bb3b55628e" />
 
 
- La commande **sudo ausearch -m avc -ts recent** renvoie **<no matches>**, ce qui prouve que notre étiquetage est correct et que SELinux ne bloque aucun accès légitime.
+ La commande **sudo ausearch -m avc -ts recent** renvoie **no matches**, ce qui prouve que notre étiquetage est correct et que SELinux ne bloque aucun accès légitime.
 
 ---
 
-## ⚙️ Automatisation avec Systemd
-L'utilisation de systemd permet de transformer un conteneur éphémère en un véritable service système robuste. En générant l'unité directement depuis Podman, nous héritons d'une gestion native du cycle de vie, du redémarrage automatique en cas d'échec (Restart=on-failure) et d'une centralisation des journaux dans journald.
+## ⚙️ Automatisation avec avec Quadlet (Systemd) 
+L'utilisation de Quadlet est la méthode moderne et recommandée par Podman pour gérer les conteneurs et pods en tant que services système. Contrairement à l'ancienne méthode dépréciée (qui générait des fichiers complexes et difficiles à maintenir), Quadlet repose sur des fichiers de configuration simples et déclaratifs.
 
-### 1. Génération du fichier de service
-
-La commande suivante crée le fichier **.service** correspondant à votre Pod. L'option **--new** garantit que le Pod sera recréé proprement à chaque démarrage, évitant ainsi les conflits d'état.
+### 1. Préparation du répertoire Quadlet
+Contrairement à l'ancienne méthode, nous utilisons le répertoire spécifique à Quadlet. Cela permet à Podman de surveiller les fichiers et de générer automatiquement les unités Systemd appropriées.
 
 ```bash
-mkdir -p ~/.config/systemd/user/
-cd ~/.config/systemd/user/
-podman generate systemd --new --name webserver-pod --files
+
+# Création du répertoire dédié aux fichiers Quadlet
+
+mkdir -p ~/.config/containers/systemd/
+cd ~/.config/containers/systemd/
+
 ```
 
-### 2. Activation du linger (pour le mode rootless au boot)
+### 2.Création du fichier de définition du Pod
 
-Par défaut, les services **systemd --user** s'arrêtent lorsque l'utilisateur se déconnecte. L'activation du "linger" permet au service de persister même après la fermeture de la session SSH : 
+Au lieu de podman generate, créons deux fichiers  nommés **webserver.pod** et **nginx.container** (On peut utiliser nano webserver.pod) dans **~/.config/containers/systemd/**:
+
+° **Le Pod (webserver.pod)** : Définit le pod et ses ports.
 
 ```bash
+
+[Pod]
+Name=webserver-pod
+PublishPort=8080:80
+```
+° **Le Conteneur (`nginx.container`)** : Définit l'image Nginx et le lie au pod.
+
+```bash
+
+    ```ini
+    [Container]
+    ContainerName=nginx-web
+    Image=docker.io/library/nginx:latest
+    Pod=webserver.pod
+
+    [Service]
+    Restart=on-failure
+```
+<img width="948" height="134" alt="D" src="https://github.com/user-attachments/assets/36abb1c9-c83d-4ca2-a799-8183af12d939" />
+
+
+### 3. Activation du « Linger »
+
+Pour garantir que nos services se lancent automatiquement au démarrage du système (même sans connexion utilisateur), activons le mode "linger" :
+
+```bash
+
 sudo loginctl enable-linger $(whoami)
-```
 
-### 3. Rechargement et activation du service
-Nous rechargeons la configuration système pour prendre en compte le nouveau fichier généré, puis nous activons le service pour qu'il se lance automatiquement au démarrage de la machine :
+# Vérification
+
+loginctl show-user $(whoami) --property=Linger
+
+```
+<img width="943" height="127" alt="image" src="https://github.com/user-attachments/assets/89430bc5-4d1f-4702-a369-d0052d8d8845" />
+
+
+### 4. Rechargement et démarrage du service
+
+Rechargeons la configuration système pour prendre en compte les nouveaux fichiers générés, puis  activons le service pour qu'il se lance automatiquement au démarrage de la machine :
 
 ```bash
+# Recharger la configuration pour détecter les fichiers Quadlet
 systemctl --user daemon-reload
-systemctl --user enable --now pod-webserver-pod.service
+
+# Activer et démarrer le service immédiatement
+systemctl --user enable --now webserver-pod.service
+
 ```
 
-### 4. Vérification du statut
-Vous devez obtenir un statut active (running), confirmant que le service est bien géré par l'infrastructure RHEL :
+### 5. Vérification du statut
+
+Vérifiez que notre infrastructure est correctement prise en charge par systemd , confirmant que le service est bien géré par l'infrastructure RHEL :
 
 ```bash
-systemctl --user status pod-webserver-pod.service
+
+systemctl --user status webserver-pod.service
 ```
 
 [Insérer ici : Capture d'écran du statut `active (running)` du service]
