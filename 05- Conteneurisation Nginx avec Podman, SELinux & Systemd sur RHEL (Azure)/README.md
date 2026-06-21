@@ -6,7 +6,7 @@
 ![Systemd](https://img.shields.io/badge/Init-Systemd-2B2E83?style=for-the-badge&logo=linux&logoColor=white)
 ![SELinux](https://img.shields.io/badge/Sécurité-SELinux-CC0000?style=for-the-badge&logo=redhat&logoColor=white)
 
-> **Objectif :** Déployer un serveur web Nginx conteneurisé avec **Podman** (rootless, sans Docker) sur une VM **RHEL 9/10** hébergée sur **Azure**, en assurant la persistance des données via un volume local, le respect des contraintes **SELinux**, et l'automatisation complète du cycle de vie via **systemd**.
+> **Objectif :** Déployer un serveur web Nginx conteneurisé avec **Podman** (rootless, sans Docker) sur une VM **RHEL 9** hébergée sur **Azure**, en assurant la persistance des données via un volume local, le respect des contraintes **SELinux**, et l'automatisation complète du cycle de vie via **systemd**.
 
 ---
 
@@ -99,7 +99,7 @@ az group create --name $RG --location $LOCATION
 az vm create \
   --resource-group $RG \
   --name $VM_NAME \
-  --image RedHat:RHEL:9-lvm:latest \
+  --image RedHat:rhel:9_8-arm64:latest \
   --size  Standard_B2ps_v2\
   --admin-username $ADMIN_USER \
   --generate-ssh-keys \
@@ -236,88 +236,81 @@ sudo ausearch -m avc -ts recent
 
 ---
 
-## ⚙️ Automatisation avec avec Quadlet (Systemd) 
-L'utilisation de Quadlet est la méthode moderne et recommandée par Podman pour gérer les conteneurs et pods en tant que services système. Contrairement à l'ancienne méthode dépréciée (qui générait des fichiers complexes et difficiles à maintenir), Quadlet repose sur des fichiers de configuration simples et déclaratifs.
+## ⚙️ Automatisation avec Systemd (Méthode Robuste)
 
-### 1. Préparation du répertoire Quadlet
-Contrairement à l'ancienne méthode, nous utilisons le répertoire spécifique à Quadlet. Cela permet à Podman de surveiller les fichiers et de générer automatiquement les unités Systemd appropriées.
+Voici une version mise à jour, propre et professionnelle pour votre `README.md`. Comme nous avons découvert que **Quadlet** n'est pas présent sur votre version actuelle de RHEL, j'ai adapté la documentation pour la **méthode robuste et universelle** (`podman generate systemd`). Cette version garantit que votre projet fonctionnera sur n'importe quel RHEL 9.
+
+---
+
+## ⚙️ Automatisation avec Systemd (Méthode Robuste)
+
+L'automatisation est une étape clé pour transformer un conteneur en un service de production. Contrairement aux scripts manuels, l'utilisation de `systemd` permet à votre serveur web de redémarrer automatiquement après un crash ou un redémarrage de la machine, tout en centralisant les logs dans `journald`.
+
+
+### 1. Génération automatique du service Systemd
+
+Podman peut générer automatiquement le fichier de configuration `systemd` requis à partir de l'infrastructure déjà en place. Cela évite les erreurs de syntaxe manuelle.
 
 ```bash
+# Création du répertoire de service pour l'utilisateur
+mkdir -p ~/.config/systemd/user/
 
-# Création du répertoire dédié aux fichiers Quadlet
-
-mkdir -p ~/.config/containers/systemd/
-cd ~/.config/containers/systemd/
+# Génération des fichiers .service
+podman generate systemd --name webserver-pod --files --new
 
 ```
 
-### 2.Création du fichier de définition du Pod
+### 2. Activation du mode « Linger »
 
-Au lieu de podman generate, créons deux fichiers  nommés **webserver.pod** et **nginx.container** (On peut utiliser nano webserver.pod) dans **~/.config/containers/systemd/**:
-
-° **Le Pod (webserver.pod)** : Définit le pod et ses ports.
+Pour garantir que nos services se lancent automatiquement au démarrage du système, même si nous ne sommes pas connectés (`rootless`), nous activons le mode "linger" pour notre utilisateur :
 
 ```bash
-
-[Pod]
-Name=webserver-pod
-PublishPort=8080:80
-```
-° **Le Conteneur (`nginx.container`)** : Définit l'image Nginx et le lie au pod.
-
-```bash
-
-    ```ini
-    [Container]
-    ContainerName=nginx-web
-    Image=docker.io/library/nginx:latest
-    Pod=webserver.pod
-
-    [Service]
-    Restart=on-failure
-```
-<img width="948" height="134" alt="D" src="https://github.com/user-attachments/assets/36abb1c9-c83d-4ca2-a799-8183af12d939" />
-
-
-### 3. Activation du « Linger »
-
-Pour garantir que nos services se lancent automatiquement au démarrage du système (même sans connexion utilisateur), activons le mode "linger" :
-
-```bash
-
+# Activation du linger pour l'utilisateur
 sudo loginctl enable-linger $(whoami)
 
 # Vérification
-
 loginctl show-user $(whoami) --property=Linger
 
 ```
-<img width="943" height="127" alt="image" src="https://github.com/user-attachments/assets/89430bc5-4d1f-4702-a369-d0052d8d8845" />
+<img width="957" height="111" alt="E" src="https://github.com/user-attachments/assets/76d2a238-8706-48b7-90ce-97429b32ee37" />
 
+### 4. Installation et démarrage du service
 
-### 4. Rechargement et démarrage du service
-
-Rechargeons la configuration système pour prendre en compte les nouveaux fichiers générés, puis  activons le service pour qu'il se lance automatiquement au démarrage de la machine :
+Déplaçons maintenant les fichiers générés vers le répertoire de configuration `systemd` et activons le service :
 
 ```bash
-# Recharger la configuration pour détecter les fichiers Quadlet
+# Déplacement des fichiers générés
+mv pod-webserver-pod.service container-nginx-web.service ~/.config/systemd/user/
+
+# Recharger la configuration système
 systemctl --user daemon-reload
 
 # Activer et démarrer le service immédiatement
-systemctl --user enable --now webserver-pod.service
+systemctl --user enable --now pod-webserver-pod.service
 
 ```
+<img width="944" height="80" alt="image" src="https://github.com/user-attachments/assets/1a9e86d4-0312-4987-a5a5-5ef5c78b6adc" />
 
 ### 5. Vérification du statut
 
-Vérifiez que notre infrastructure est correctement prise en charge par systemd , confirmant que le service est bien géré par l'infrastructure RHEL :
+Vérifions que notre infrastructure est correctement prise en charge par `systemd`. Le statut doit indiquer `active (running)`.
 
 ```bash
+# Vérification du statut du service
+systemctl --user status pod-webserver-pod.service
 
-systemctl --user status webserver-pod.service
 ```
+<img width="953" height="301" alt="F" src="https://github.com/user-attachments/assets/ac285b22-3dd6-41ef-9607-907a281cd730" />
 
-[Insérer ici : Capture d'écran du statut `active (running)` du service]
+
+<img width="960" height="175" alt="G" src="https://github.com/user-attachments/assets/873b07bb-59c7-4b30-bca8-f186e733a025" />
+
+
+---
+
+### 💡 Note sur les méthodes d'automatisation
+
+*Note technique : Bien que **Quadlet** soit la méthode déclarative moderne recommandée dans les versions récentes de Podman, la méthode `podman generate systemd` utilisée ici reste le standard industriel sur RHEL pour garantir la compatibilité et la robustesse de vos services en environnement d'entreprise.*
 
 ---
 
@@ -354,7 +347,6 @@ sudo firewall-cmd --reload
 
 > ⚠️ Sur Azure, **deux couches** filtrent le trafic : le NSG (au niveau réseau Azure) et `firewalld` (au niveau de l'OS). Les deux doivent autoriser le port 8080 pour un accès externe complet.
 
-[Insérer ici : Capture d'écran d'un log `journalctl` après résolution d'un incident]
 
 ---
 
@@ -367,7 +359,7 @@ Ce projet illustre une maîtrise concrète des compétences suivantes, directeme
 - ✅ Industrialisation du cycle de vie applicatif via **systemd** (génération d'unité, linger, gestion utilisateur).
 - ✅ Diagnostic méthodique via `journalctl` et `ausearch`.
 - ✅ Gestion réseau et pare-feu (`firewalld`) sur RHEL.
-- ✅ Capacité à documenter un projet technique de manière claire et reproductible — compétence clé pour le travail en équipe DevOps.
+- ✅ Capacité à documenter un projet technique de manière claire et reproductible,compétence clé pour le travail en équipe DevOps.
 
 ---
 
@@ -375,36 +367,21 @@ Ce projet illustre une maîtrise concrète des compétences suivantes, directeme
 
 Pour industrialiser davantage ce projet et démontrer une approche **Infrastructure as Code**, l'étape naturelle suivante consisterait à :
 
-- Écrire un **playbook Ansible** automatisant l'installation de Podman, la création du volume, le lancement du pod et la génération/activation du service systemd — rendant le déploiement entièrement idempotent et reproductible sur plusieurs VMs.
+- Écrire un **playbook Ansible** automatisant l'installation de Podman, la création du volume, le lancement du pod et la génération/activation du service systemd ,rendant le déploiement entièrement idempotent et reproductible sur plusieurs VMs.
 - Utiliser le module `containers.podman` de la collection Ansible officielle (`ansible-galaxy collection install containers.podman`).
 - Stocker la configuration Nginx et les playbooks dans ce même dépôt Git pour une traçabilité complète.
 
-[Insérer ici : Lien vers un futur dépôt ou une future branche contenant le playbook Ansible]
 
----
 
-## 📂 Structure du dépôt
-
-```
-.
-├── README.md
-├── nginx-data/
-│   └── html/
-│       └── index.html
-└── systemd/
-    └── pod-webserver-pod.service
-```
-
----
 
 ## 👤 Auteur
 
 **Serge TOGNON**
-Cloud & Linux Infrastructure Engineer — AZ-104 Certified · RHCSA (EX200) Candidate
+Cloud & Linux Infrastructure Engineer , AZ-104 Certified · RHCSA (EX200) Candidate
 - 🔗 GitHub : [Serge9794](https://github.com/Serge9794)
 - 💼 LinkedIn : [Serge TOGNON](https://linkedin.com/in/serge-tognon-a63443187)
 
 ---
 
-*Lab réalisé dans le cadre d'une formation en administration système Linux & Cloud Azure — © 2026*
+*Lab réalisé dans le cadre de la formation en administration système Linux & Cloud Azure — © 2026*
 
