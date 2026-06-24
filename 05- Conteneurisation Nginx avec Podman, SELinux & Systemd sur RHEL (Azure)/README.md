@@ -232,15 +232,7 @@ sudo ausearch -m avc -ts recent
 <img width="942" height="153" alt="C" src="https://github.com/user-attachments/assets/e41a663d-3e49-4c54-9db2-11bb3b55628e" />
 
 
- La commande **sudo ausearch -m avc -ts recent** renvoie **no matches**, ce qui prouve que notre étiquetage est correct et que SELinux ne bloque aucun accès légitime.
-
----
-
-## ⚙️ Automatisation avec Systemd (Méthode Robuste)
-
-Voici une version mise à jour, propre et professionnelle pour votre `README.md`. Comme nous avons découvert que **Quadlet** n'est pas présent sur votre version actuelle de RHEL, j'ai adapté la documentation pour la **méthode robuste et universelle** (`podman generate systemd`). Cette version garantit que votre projet fonctionnera sur n'importe quel RHEL 9.
-
----
+ La commande **sudo ausearch -m avc -ts recent** renvoie **no matches**, ce qui prouve que notre étiquetage est correct et que SELinux ne bloque aucun accès 
 
 ## ⚙️ Automatisation avec Systemd (Méthode Robuste)
 
